@@ -53,7 +53,7 @@ class Graph :
         """
         Function to add a vertex to the neighborhood of an another vertex.
         Args :
-            vertex : The vertex we want to add the neighbor too, type = str.
+            vertex : The vertex we want to add the neighbor, type = str.
             neighbor : The vertex we xant 
         """
         # We check is the vertex and the neighbor is in of the graph.
@@ -65,19 +65,41 @@ class Graph :
         self.neighborhoods[self.vertices.index(neighbor)].add(self.vertices.index(vertex))
     
     def remove_neighbor(self, vertex, neighbor):
+        """
+        Function to remove a vertex to the neighborhood of an another vertex.
+        Args :
+            vertex : The vertex we want to remove the neighbor, type = str.
+            neighbor : The vertex we want to remove 
+        """
+        # We check is the vertex and the neighbor is in of the graph.
         self._check_vertex(vertex)
-        self._check_vertex(neighbor)       
+        self._check_vertex(neighbor)
 
+        #If it's noy the case, we remove the neighbor to the neighborhood of the vertex and vice-versa. 
         self.neighborhoods[self.vertices.index(vertex)].remove(self.vertices.index(neighbor))
         self.neighborhoods[self.vertices.index(neighbor)].remove(self.vertices.index(vertex))
     
     def get_neighborhood(self, vertex):
+        """
+        Function to get the neighborhood of a vertex.
+        Args :
+            vertex : The vertex we want to know the neighborhood, type = str.
+        """
+        # We check is the vertex is in the graph.
         self._check_vertex(vertex)
 
+        # We return the neighborhood
         return self.neighborhoods[self.vertices.index(vertex)]
         
     def get_length_neighborhood(self,vertex):
+        """
+        Function to get the legth of the neighborhood of a vertex.
+        Args :
+            vertex : The vertex we want to know the length neighborhood, type = str.
+        """
+        # We check is the vertex is in the graph.
         self._check_vertex(vertex)
 
+        # We return the legnht of neighborhood
         return len(self.neighborhoods[self.vertices.index(vertex)])
     
