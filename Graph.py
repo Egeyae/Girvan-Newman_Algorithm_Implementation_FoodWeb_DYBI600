@@ -16,6 +16,12 @@ class Graph :
         self.vertices = [] # The vertices of the graph, str type
         self.neighborhoods = [] # The neighborhoods of each vertex of the graph
 
+    def __str__(self):
+        s = f"Size: {self.nb_vertices}\n"
+        for i in range(self.nb_vertices):
+            s += f"[{i}] {self.vertices[i]} : {', '.join([str(x) for x in self.neighborhoods[i]])}\n"
+        return s
+
     def _check_vertex(self,vertex,t="out"):
         """
         Check and raise a error depending of the setting.
@@ -40,6 +46,7 @@ class Graph :
 
         # If it's not the case, we add the vertex to the list of vertices and we add one to the numbers of vertices.
         self.vertices.append(vertex)
+        self.neighborhoods.append(set())
         self.nb_vertices += 1
         print("The vertex is added.") # To comment if not in verbose mode
     
@@ -52,9 +59,21 @@ class Graph :
         # We check is the vertex is not already removed of the graph.
         self._check_vertex(vertex)
 
+        index = self.vertices.index(vertex)
+
         # If it's not the case, we remove the vertex of the list of vertices and we substract one to the numbers of vertices.
-        self.vertices.pop(self.vertices.index(vertex))
+        self.vertices.pop(index)
+        self.neighborhoods.pop(index)
+
         self.nb_vertices -= 1
+
+        
+        for i in range(self.nb_vertices):
+            self.neighborhoods[i].discard(index)
+            self.neighborhoods[i] = {n-1 if n>index else n for n in self.neighborhoods[i]}
+            
+
+        
 
     def add_edge(self, vertex,neighbor):
         """
@@ -110,57 +129,72 @@ class Graph :
         # We return the legnht of neighborhood
         return len(self.neighborhoods[self.vertices.index(vertex)])
     
-    def display_graph(self, k: int = 10, desired: float = 0.2, repulsion: float = 0.1, attraction: float = 0.1) -> None:
+    def get_vertex(self, index):
+        if index >= self.nb_vertices:
+            raise IndexError(f"{index} is invalid ! (Should be < {self.nb_vertices})")
+        
+        return self.vertices[index]
+    
+    def plot(self, k: int = 5000, desired: float = 0.2, repulsion: float = 0.1,
+          attraction: float = 0.1, title: str = "Graph plot",
+          output: str = None, show: bool = True):
         """
-        This function computes an appropriate render for our graph on a matplotlib plot.
+        Compute positions then save and/or show the resulting plot
+
+        Args:
+            k: number of iterations
+            desired: desired distance between neighbors
+            repulsion: repulsion force
+            attraction: attraction force
+            title: graph title
+            output: if provided, saves the plot to specified file
+            show: if True, display the graph (by default = True)
         """
         positions = [[random(), random()] for _ in range(self.nb_vertices)]
-        all_vertices = set(self.vertices)
+        all_vertices = set(range(self.nb_vertices))
 
         for _ in range(k):
             change_vectors = [[] for _ in range(self.nb_vertices)]
-            for p in self.vertices:
-                i = self.vertices.index(p)
-                not_neighbors = all_vertices - set(self.get_neighborhood(p))
+            for i in range(self.nb_vertices):
+                neighbors = self.neighborhoods[i]
+                not_neighbors = all_vertices - neighbors - {i}
 
                 # Repulsion
-                for nn in not_neighbors:
-                    j = self.vertices.index(nn)
+                for j in not_neighbors:
                     dx = positions[i][0] - positions[j][0]
                     dy = positions[i][1] - positions[j][1]
                     dist = max(0.01, (dx**2 + dy**2)**0.5)
-                    force = repulsion / dist
+                    force = repulsion / dist**2
                     change_vectors[i].append([dx/dist * force, dy/dist * force])
 
                 # Attraction
-                for n in self.get_neighborhood(p):
-                    j = self.vertices.index(n)
+                for j in neighbors:
                     dx = positions[i][0] - positions[j][0]
                     dy = positions[i][1] - positions[j][1]
                     dist = max(0.01, (dx**2 + dy**2)**0.5)
                     force = attraction * (dist - desired)
                     change_vectors[i].append([-dx/dist * force, -dy/dist * force])
 
-            # Apply change vectors
             for i in range(self.nb_vertices):
-                final_dx = sum([x[0] for x in change_vectors[i]])
-                final_dy = sum([x[1] for x in change_vectors[i]])
-                positions[i][0] += final_dx
-                positions[i][1] += final_dy
+                final_dx = sum(v[0] for v in change_vectors[i])
+                final_dy = sum(v[1] for v in change_vectors[i])
+                positions[i][0] += final_dx * 0.01
+                positions[i][1] += final_dy * 0.01
 
-        x, y = [pos[0] for pos in positions], [pos[1] for pos in positions]
+        x = [pos[0] for pos in positions]
+        y = [pos[1] for pos in positions]
 
-        # Plot vertices
         fig, ax = plt.subplots()
-        ax.scatter(x, y, c='red')
 
-        # Plot edges
-        for p in self.vertices:
-            i = self.vertices.index(p)
-            for n in self.get_neighborhood(p):
-                j = self.vertices.index(n)
-                ax.plot([x[i], x[j]], [y[i], y[j]], 'b-')
+        ax.scatter(x, y)
+        for i in range(self.nb_vertices):
+            for j in self.neighborhoods[i]:
+                ax.plot([x[i], x[j]], [y[i], y[j]], 'k-')
+        ax.set_title(title)
 
-        plt.title("Graph")
-        plt.show()
+        if output:
+            fig.savefig(output, dpi=300, bbox_inches='tight')
+            plt.close(fig)
+        if show:
+            plt.show()
     
