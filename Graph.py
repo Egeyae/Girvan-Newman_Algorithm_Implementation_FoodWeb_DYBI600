@@ -43,17 +43,73 @@ class Graph :
         self.nb_vertices += 1
         print("The vertex is added.") # To comment if not in verbose mode
     
-    def remove_vertex(self, vertex):
-        pass
+    def remove_vertex(self,vertex):
+        """
+        Function to remove a vertex to the graph.
+        Args :
+            vertex : The vertex we want to add, type = str.
+        """
+        # We check is the vertex is not already removed of the graph.
+        self._check_vertex(vertex)
 
-    def add_neighbor(self, vertex,neighbor):
-        if neighbor not in self.vertices :
-            print("The neighbor is not in the vertices")
-        elif vertex not in self.vertex:
-            print("The vertex is not in the vertices")
-        else:
-            self.neighborhoods[self.vertices.index(vertex)].add(self.vertices.index(neighbor))
+        # If it's not the case, we remove the vertex of the list of vertices and we substract one to the numbers of vertices.
+        self.vertices.pop(self.vertices.index(vertex))
+        self.nb_vertices -= 1
 
+    def add_edge(self, vertex,neighbor):
+        """
+        Function to add a vertex to the neighborhood of an another vertex.
+        Args :
+            vertex : The vertex we want to add the neighbor, type = str.
+            neighbor : The vertex we xant 
+        """
+        # We check is the vertex and the neighbor is in of the graph.
+        self._check_vertex(vertex)
+        self._check_vertex(neighbor)
+
+        #If it's noy the case, we add the neighbor to the neighborhood of the vertex and vice-versa. 
+        self.neighborhoods[self.vertices.index(vertex)].add(self.vertices.index(neighbor))
+        self.neighborhoods[self.vertices.index(neighbor)].add(self.vertices.index(vertex))
+    
+    def remove_edge(self, vertex, neighbor):
+        """
+        Function to remove a vertex to the neighborhood of an another vertex.
+        Args :
+            vertex : The vertex we want to remove the neighbor, type = str.
+            neighbor : The vertex we want to remove 
+        """
+        # We check is the vertex and the neighbor is in of the graph.
+        self._check_vertex(vertex)
+        self._check_vertex(neighbor)
+
+        #If it's noy the case, we remove the neighbor to the neighborhood of the vertex and vice-versa. 
+        self.neighborhoods[self.vertices.index(vertex)].remove(self.vertices.index(neighbor))
+        self.neighborhoods[self.vertices.index(neighbor)].remove(self.vertices.index(vertex))
+    
+    def get_neighborhood(self, vertex):
+        """
+        Function to get the neighborhood of a vertex.
+        Args :
+            vertex : The vertex we want to know the neighborhood, type = str.
+        """
+        # We check is the vertex is in the graph.
+        self._check_vertex(vertex)
+
+        # We return the neighborhood
+        return self.neighborhoods[self.vertices.index(vertex)]
+        
+    def get_length_neighborhood(self,vertex):
+        """
+        Function to get the legth of the neighborhood of a vertex.
+        Args :
+            vertex : The vertex we want to know the length neighborhood, type = str.
+        """
+        # We check is the vertex is in the graph.
+        self._check_vertex(vertex)
+
+        # We return the legnht of neighborhood
+        return len(self.neighborhoods[self.vertices.index(vertex)])
+    
     def display_graph(self, k: int = 10, desired: float = 0.2, repulsion: float = 0.1, attraction: float = 0.1) -> None:
         """
         This function computes an appropriate render for our graph on a matplotlib plot.
@@ -107,70 +163,4 @@ class Graph :
 
         plt.title("Graph")
         plt.show()
-
-        """
-        Function to remove a vertex to the graph.
-        Args :
-            vertex : The vertex we want to add, type = str.
-        """
-        # We check is the vertex is not already removed of the graph.
-        self._check_vertex(vertex)
-
-        # If it's not the case, we remove the vertex of the list of vertices and we substract one to the numbers of vertices.
-        self.vertices.pop(self.vertices.index(vertex))
-        self.nb_vertices -= 1
-
-    def add_edge(self, vertex,neighbor):
-        """
-        Function to add a vertex to the neighborhood of an another vertex.
-        Args :
-            vertex : The vertex we want to add the neighbor, type = str.
-            neighbor : The vertex we xant 
-        """
-        # We check is the vertex and the neighbor is in of the graph.
-        self._check_vertex(vertex)
-        self._check_vertex(neighbor)
-
-        #If it's noy the case, we add the neighbor to the neighborhood of the vertex and vice-versa. 
-        self.neighborhoods[self.vertices.index(vertex)].add(self.vertices.index(neighbor))
-        self.neighborhoods[self.vertices.index(neighbor)].add(self.vertices.index(vertex))
-    
-    def remove_neighbor(self, vertex, neighbor):
-        """
-        Function to remove a vertex to the neighborhood of an another vertex.
-        Args :
-            vertex : The vertex we want to remove the neighbor, type = str.
-            neighbor : The vertex we want to remove 
-        """
-        # We check is the vertex and the neighbor is in of the graph.
-        self._check_vertex(vertex)
-        self._check_vertex(neighbor)
-
-        #If it's noy the case, we remove the neighbor to the neighborhood of the vertex and vice-versa. 
-        self.neighborhoods[self.vertices.index(vertex)].remove(self.vertices.index(neighbor))
-        self.neighborhoods[self.vertices.index(neighbor)].remove(self.vertices.index(vertex))
-    
-    def get_neighborhood(self, vertex):
-        """
-        Function to get the neighborhood of a vertex.
-        Args :
-            vertex : The vertex we want to know the neighborhood, type = str.
-        """
-        # We check is the vertex is in the graph.
-        self._check_vertex(vertex)
-
-        # We return the neighborhood
-        return self.neighborhoods[self.vertices.index(vertex)]
-        
-    def get_length_neighborhood(self,vertex):
-        """
-        Function to get the legth of the neighborhood of a vertex.
-        Args :
-            vertex : The vertex we want to know the length neighborhood, type = str.
-        """
-        # We check is the vertex is in the graph.
-        self._check_vertex(vertex)
-
-        # We return the legnht of neighborhood
-        return len(self.neighborhoods[self.vertices.index(vertex)])
     
