@@ -9,7 +9,7 @@ class Graph :
     """
     def __init__(self):
         """
-        This function initialize the variable of the Graph. 
+        This function initialize the variable of the Graph.
         """
 
         self.nb_vertices = 0  #How many vertices in the graph 
@@ -75,35 +75,33 @@ class Graph :
 
         
 
-    def add_edge(self, vertex,neighbor):
+    def add_edge(self, vertex1,vertex2):
         """
-        Function to add a vertex to the neighborhood of an another vertex.
+        Function to add an edge between two vertices.
         Args :
-            vertex : The vertex we want to add the neighbor, type = str.
-            neighbor : The vertex we xant 
+            vertex1, vertex 2 : The two vertices, type = str. 
         """
-        # We check is the vertex and the neighbor is in of the graph.
-        self._check_vertex(vertex)
-        self._check_vertex(neighbor)
+        # We check if both of the vertices are in the graph.
+        self._check_vertex(vertex1)
+        self._check_vertex(vertex2)
 
-        #If it's noy the case, we add the neighbor to the neighborhood of the vertex and vice-versa. 
-        self.neighborhoods[self.vertices.index(vertex)].add(self.vertices.index(neighbor))
-        self.neighborhoods[self.vertices.index(neighbor)].add(self.vertices.index(vertex))
+        #If it's not the case, we add the edge. 
+        self.neighborhoods[self.vertices.index(vertex1)].add(self.vertices.index(vertex2))
+        self.neighborhoods[self.vertices.index(vertex2)].add(self.vertices.index(vertex1))
     
-    def remove_edge(self, vertex, neighbor):
+    def remove_edge(self, vertex1, vertex2):
         """
-        Function to remove a vertex to the neighborhood of an another vertex.
+        Function to remove an edge between two vertices.
         Args :
-            vertex : The vertex we want to remove the neighbor, type = str.
-            neighbor : The vertex we want to remove 
+            vertex1, vertex 2 : The two vertices, type = str. 
         """
-        # We check is the vertex and the neighbor is in of the graph.
-        self._check_vertex(vertex)
-        self._check_vertex(neighbor)
+        # We check if both of the vertices are in the graph.
+        self._check_vertex(vertex1)
+        self._check_vertex(vertex2)
 
-        #If it's noy the case, we remove the neighbor to the neighborhood of the vertex and vice-versa. 
-        self.neighborhoods[self.vertices.index(vertex)].remove(self.vertices.index(neighbor))
-        self.neighborhoods[self.vertices.index(neighbor)].remove(self.vertices.index(vertex))
+        #If it's not the case, we remove the edge. 
+        self.neighborhoods[self.vertices.index(vertex1)].remove(self.vertices.index(vertex2))
+        self.neighborhoods[self.vertices.index(vertex2)].remove(self.vertices.index(vertex1))
     
     def get_neighborhood(self, vertex):
         """
@@ -119,7 +117,7 @@ class Graph :
         
     def get_length_neighborhood(self,vertex):
         """
-        Function to get the legth of the neighborhood of a vertex.
+        Function to get the length of the neighborhood of a vertex.
         Args :
             vertex : The vertex we want to know the length neighborhood, type = str.
         """
@@ -130,6 +128,11 @@ class Graph :
         return len(self.neighborhoods[self.vertices.index(vertex)])
     
     def get_vertex(self, index):
+        """
+        Function to get the vertex by it's index.
+        Args :
+            index = The index of the vertex we want to get.
+        """
         if index >= self.nb_vertices:
             raise IndexError(f"{index} is invalid ! (Should be < {self.nb_vertices})")
         
