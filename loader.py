@@ -8,10 +8,10 @@ def load_karate():
 
     # Initilaze dict and graph.
     groups = {}
-    karate_graph = g.Graph()
+    karate_graph = g.Graph(name="Karate dataset")
 
     #Open the first csv file where the vertices are in.
-    with open("Karate_club_dataset/nodes.csv") as fnodes:
+    with open("data/Karate_club_dataset/nodes.csv") as fnodes:
         nodes = csv.reader(fnodes)
 
         #Skip the first line with the columns names.
@@ -28,8 +28,8 @@ def load_karate():
             else :
                 groups[line[2]].append(line[1])
     
-    #Open the second vsc file with the edges.
-    with open("Karate_club_dataset/edges.csv") as fedges :
+    #Open the second csv file with the edges.
+    with open("data/Karate_club_dataset/edges.csv") as fedges :
         edges = csv.reader(fedges)
 
         #Skip the first line with the columns names.
@@ -37,10 +37,13 @@ def load_karate():
         # For each line :
         for line in edges:
 
-            #Add the edge with + 1, because in the file index are use and not name.
+            #Add the edge with + 1, because in the file index are used and not name.
             karate_graph.add_edge(str(int(line[0])+1), str(int(line[1])+1))
     
-    return karate_graph, groupes
+    return karate_graph, groups
 
-            
-karate_graph, groupes = load_karate()[0],load_karate()[1]
+
+if __name__ == "__main__":            
+    karate_graph, groups = load_karate()
+
+    karate_graph.plot()

@@ -7,7 +7,7 @@ class Graph :
 
     Later all functions implemented to run Girvan-Newman algorithm on graphs are based on this class
     """
-    def __init__(self):
+    def __init__(self, name: str = "Graph"):
         """
         This function initialize the variable of the Graph.
         """
@@ -16,11 +16,16 @@ class Graph :
         self.vertices = [] # The vertices of the graph, str type
         self.neighborhoods = [] # The neighborhoods of each vertex of the graph
 
+        self._name = name
+
     def __str__(self):
         s = f"Size: {self.nb_vertices}\n"
         for i in range(self.nb_vertices):
             s += f"[{i}] {self.vertices[i]} : {', '.join([str(x) for x in self.neighborhoods[i]])}\n"
         return s
+
+    def get_name(self):
+        return self._name
 
     def _check_vertex(self,vertex,t="out"):
         """
@@ -48,7 +53,7 @@ class Graph :
         self.vertices.append(vertex)
         self.neighborhoods.append(set())
         self.nb_vertices += 1
-        print("The vertex is added.") # To comment if not in verbose mode
+        # print("The vertex is added.") # To comment if not in verbose mode
     
     def remove_vertex(self,vertex):
         """
@@ -71,9 +76,6 @@ class Graph :
         for i in range(self.nb_vertices):
             self.neighborhoods[i].discard(index)
             self.neighborhoods[i] = {n-1 if n>index else n for n in self.neighborhoods[i]}
-            
-
-        
 
     def add_edge(self, vertex1,vertex2):
         """
@@ -138,9 +140,9 @@ class Graph :
         
         return self.vertices[index]
     
-    def plot(self, k: int = 10000, desired: float = 0.1, repulsion: float = 0.3,
-          attraction: float = 0.1, title: str = "Graph plot",
-          output: str = None, show: bool = True):
+    def plot(self, k: int = 5000, desired: float = 0.15, repulsion: float = 0.1,
+          attraction: float = 0.2, title: str|None = None,
+          output: str|None = None, show: bool = True):
         """
         Compute positions then save and/or show the resulting plot
 
@@ -149,12 +151,13 @@ class Graph :
             desired: desired distance between neighbors
             repulsion: repulsion force
             attraction: attraction force
-            title: graph title
+            title: graph title, by default is the name of the Graph()
             output: if provided, saves the plot to specified file
             show: if True, display the graph (by default = True)
         """
         positions = [[random(), random()] for _ in range(self.nb_vertices)]
         all_vertices = set(range(self.nb_vertices))
+        t = title or self._name
 
         for _ in range(k):
             change_vectors = [[] for _ in range(self.nb_vertices)]
@@ -193,7 +196,7 @@ class Graph :
         for i in range(self.nb_vertices):
             for j in self.neighborhoods[i]:
                 ax.plot([x[i], x[j]], [y[i], y[j]], 'k-')
-        ax.set_title(title)
+        ax.set_title(t)
 
         if output:
             fig.savefig(output, dpi=300, bbox_inches='tight')
