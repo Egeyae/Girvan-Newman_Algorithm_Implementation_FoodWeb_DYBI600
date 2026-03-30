@@ -22,16 +22,22 @@ What has been done:
 """
 
 def brandes(g: Graph):
+    # computed betweeness
     CB = dict()
 
+    # we loop over all graph vertices
     for s in g.vertices:
+        # initialize delta, prev, sigma and dist values for current loop
         delta = {k:0 for k in g.vertices}
         prev = {k:[] for k in g.vertices}
         sig = {k:0 for k in g.vertices}
         dist = {k:float('inf') for k in g.vertices}
 
+        # the source is set to a dist of 0 and sig of 1
         sig[s] = 1
         dist[s] = 0
+
+        # forward bfs
 
         queue = [s,]
         stack = []
@@ -51,12 +57,17 @@ def brandes(g: Graph):
                     sig[v] = sig[v] + sig[w]
                     prev[v].append(w)
 
+        # backpropagation
+
         while len(stack) > 0:
             w = stack.pop(0)
 
             for v in prev[w]:
                 c = (sig[v]/sig[w]) * (1+delta[w])
+
+                # ensure always same order (alphebetical)
                 edge = '.'.join(list(sorted((v, w))))
+                
                 CB[edge] = CB.get(edge, 0) + c
                 delta[v] += c
 
