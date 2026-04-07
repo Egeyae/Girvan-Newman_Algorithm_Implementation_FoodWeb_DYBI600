@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt
 from random import random
+from adjustText import adjust_text
+
+
 class Graph :
     """
     Class used to represent a Graph in our project
@@ -141,7 +144,7 @@ class Graph :
         return self.vertices[index]
     
     def plot(self, k: int = 5000, desired: float = 0.15, repulsion: float = 0.1,
-          attraction: float = 0.2, title: str|None = None,
+          attraction: float = 0.2, title: str|None = None, labels: bool = False, colors: list|None = None,
           output: str|None = None, show: bool = True):
         """
         Compute positions then save and/or show the resulting plot
@@ -192,11 +195,17 @@ class Graph :
 
         fig, ax = plt.subplots()
 
-        ax.scatter(x, y)
+        col = colors or ['blue' for _ in range(self.nb_vertices)]
+        
+        ax.scatter(x, y, c=col, s=40)
+
         for i in range(self.nb_vertices):
             for j in self.neighborhoods[i]:
                 ax.plot([x[i], x[j]], [y[i], y[j]], 'k-')
         ax.set_title(t)
+        if labels:
+            ax = [ax.annotate(txt, (x[i],y[i])) for i, txt in enumerate(self.vertices)]
+            adjust_text(ax)
 
         if output:
             fig.savefig(output, dpi=300, bbox_inches='tight')

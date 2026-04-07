@@ -1,4 +1,5 @@
 from Graph import Graph
+from random import choices
 
 g = Graph()
 
@@ -40,6 +41,6 @@ g.add_edge("X","Z")
 
 
 
-g.plot(k=5000)
+g.plot(k=5000, labels=True, colors=choices(["blue", "red", "yellow", "green", "grey"], k=g.nb_vertices))
 
 
