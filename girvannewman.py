@@ -58,7 +58,6 @@ def brandes(g: Graph):
 
         while len(stack) > 0:
             w = stack.pop(0)
-
             for v in prev[w]:
                 c = (sig[v]/sig[w]) * (1+delta[w])
 
@@ -72,7 +71,50 @@ def brandes(g: Graph):
 
 
 def _modularity(g: Graph):
-    pass
+
+    v_visited = set()
+    community_members = []
+
+    for vertex in g.vertices :
+        if vertex in v_visited :
+            continue 
+
+        members = []
+        queue = [vertex]
+
+        while queue :
+            v = queue.pop(0)
+            if v in v_visited : 
+                continue 
+            v_visited.add(v)
+            members.append(v)
+
+            for neighbor in g.get_neighborhood(v):
+                if neighbor not in v_visited : 
+                    queue.append(neighbor)
+        community_members.append(members)
+    
+    m = g.nb_edges
+    if m == 0 :
+        return 0
+    
+    edge_contribution = 0
+    degree_tex = 0
+
+    for members in community_members : 
+        members_set = set(members)
+
+        e_A = 0
+        for v in members : 
+            for neighbor in g.get_neighborhood(v):
+                if neighbor in members_set : 
+                    e_A += 1
+        vol_A = sum(g.get_length_neighborhood(v) for v in members)
+
+        edge_contribution += e_A
+        degree_tex += vol_A ** 2
+    return((edge_contribution/m) - (degree_tex / (4*m*m)))
+
 
 def _dendrogram(g: Graph):
     pass

@@ -33,7 +33,7 @@ class Graph :
 
     def _check_vertex(self, vertex: str, t="out") -> None:
         """
-        Check and raise a error depending of the setting.
+        Check and raise an error depending of the setting.
         Args :
             vertex : The vertex we want to check, type = str. 
             t : If t = out, we want to check if the vertex is not in the graph and if yes raise an error,
