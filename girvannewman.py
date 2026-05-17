@@ -73,7 +73,7 @@ def brandes(g: Graph):
 def modularity(g_original, partition):
     """Calculates the modularity of a graph
     Parameters : Graph"""
-    
+
     m = g_original.nb_edges
 
     degrees = {}
@@ -104,8 +104,81 @@ def modularity(g_original, partition):
     return Q/(4*m)
             
 
+def bfs(g_current, source):
+    distances = {}
+    nb_paths = {}
+    befores ={}
+
+    for v in g_current.verices:
+        distances[v] = -1
+        nb_paths[v] = 0
+        befores[v] = []
+    order_visited = []
+
+    distances[source] = 0
+    nb_paths[source] = 1
+
+    file =[source]
+
+    while file != [] :
+        visited = file.pop(0)
+        order_visited.append(visited)
+
+        for v in g_current.get_neighborhood(visited):
+            if distances[v] == -1:
+                distances[v] = distances[visited] + 1
+                file.append(v)
+
+            if distances[v] == distances[visited] + 1:
+                nb_paths[v] += nb_paths[visited]
+                befores[v].append(visited)
+
+    return distances, nb_paths, befores, order_visited 
+
+def betweeness(g) :
+    betweeness = {}
+    for v in g.vertices :
+        for visited in g.get_neighborhood(visited) :
+            betweeness[(v, visited)] = 0
+    
+    for v in g.vertices :
+        distances, nb_pahts, befores, order_visited = bfs(g, v)
+    
+    for path in betweeness :
+        betweeness[path]/=2
+
+    return betweeness
+
+def connexion(g):
+
+    visited = set()
+    partition= []
+    composed = []
+    for vertex in g.vertices : 
+        if vertex not in visited : 
+            distances, nb_paths, befores, order_visited = bfs(g, vertex)
+            if distances[vertex] != -1 :
+                composed.append(vertex)
+            visited.update(composed)
+            partition.append(composed)
+    return partition 
+
+
 def _modularity(g: Graph):
-    pass
+    best_Q = -100
+    best_partition = None 
+
+    while g.nb_edged > 0:
+        betweenness = betweeness(g)
+        (u,v) = max(betweenness, key = lambda vertex : betweenness[vertex])
+        g.remove_edge(u,v)
+        partition = connexion(g)
+        Q = modularity(g, partition)
+
+        if Q > best_Q :
+            best_Q = Q
+            best_partition = partition
+    return best_partition, best_Q
 
 
 def _dendrogram(g: Graph):
