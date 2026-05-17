@@ -70,50 +70,42 @@ def brandes(g: Graph):
     return CB 
 
 
+def modularity(g_original, partition):
+    """Calculates the modularity of a graph
+    Parameters : Graph"""
+    
+    m = g_original.nb_edges
+
+    degrees = {}
+
+    for vertex in range(g_original.get_vertices):
+        degrees[vertex] = g_original.get_length_neighborhood(vertex)
+
+    communitie_part ={}
+    for index, community in enumerate(partition):
+        for vertex in community :
+            communitie_part[vertex] = index
+
+    Q = 0
+
+    for i in range(g_original.nb_edges):
+        for j in range(g_original.nb_edges) :
+            if communitie_part[i] == communitie_part[j]:
+                sij = 1
+            else:
+                sij = -1
+            if j in g_original.get_neighborhood(i):
+                A_ij = 1
+            else :
+                A_ij = 0
+            calcul = (A_ij -(degrees[i] *degrees[j])/(2*m) *sij)
+            Q+= calcul
+
+    return Q/(4*m)
+            
+
 def _modularity(g: Graph):
-
-    v_visited = set()
-    community_members = []
-
-    for vertex in g.vertices :
-        if vertex in v_visited :
-            continue 
-
-        members = []
-        queue = [vertex]
-
-        while queue :
-            v = queue.pop(0)
-            if v in v_visited : 
-                continue 
-            v_visited.add(v)
-            members.append(v)
-
-            for neighbor in g.get_neighborhood(v):
-                if neighbor not in v_visited : 
-                    queue.append(neighbor)
-        community_members.append(members)
-    
-    m = g.nb_edges
-    if m == 0 :
-        return 0
-    
-    edge_contribution = 0
-    degree_tex = 0
-
-    for members in community_members : 
-        members_set = set(members)
-
-        e_A = 0
-        for v in members : 
-            for neighbor in g.get_neighborhood(v):
-                if neighbor in members_set : 
-                    e_A += 1
-        vol_A = sum(g.get_length_neighborhood(v) for v in members)
-
-        edge_contribution += e_A
-        degree_tex += vol_A ** 2
-    return((edge_contribution/m) - (degree_tex / (4*m*m)))
+    pass
 
 
 def _dendrogram(g: Graph):
