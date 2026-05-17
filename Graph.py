@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
-from random import random
-from adjustText import adjust_text
+from random import random, randint
 from math import sqrt
 
 class Graph :
@@ -245,4 +244,49 @@ class Graph :
             plt.close(fig)
         if show:
             plt.show()
+    
+
+def random_graph(nb_communities : int, nb_vertices : int, e : float = 0.80, k :float = 0.20 ):
+    """
+    Fonction to create a random graph with a determined number of communities and vertices. 
+    e and k are parameters for the probability to have an edge between vertices. Return the graph created.
+    Args :
+        nb_communities : Number of communities desired in the graph.
+        nb_vertices : Number of vertices in the graph desired.
+        e : Probility of an edge between two vertices of the same communitiy. Default : 0.8
+        k : Probability of an edge between two vertices in different communities. Default : 0.2
+    """
+    if 2*nb_communities > nb_vertices :
+        raise ValueError("The number of communities is superior to the number of vertices")
+    name = f"Graph_r_com{nb_communities}_v{nb_vertices}"
+    graph = Graph(name)
+    i = 0
+    communities = {x :[] for x in range(1,(nb_communities+1))}
+    while i<nb_vertices:
+        graph.add_vertex(str(i))
+        key = randint(1,nb_communities+1)
+        communities[key].append(str(i))
+        i += 1
+    
+    for l in communities.keys():
+        if len(communities[l]) == 0:
+            return random_graph(nb_communities, nb_vertices,e,k)
+        else :
+            for v in communities[l]:
+                for v2 in communities[l] :
+                    p = random()
+                    if p < e and v != v2:
+                        graph.add_edge(v,v2)
+
+    for l in communities.keys():
+        for l2 in communities.keys():
+            if l != l2 :
+                for v in communities[l]:
+                    for v2 in communities[l2]:
+                        p = random()
+                        if p < k :
+                            graph.add_edge(v,v2)
+
+    return graph, communities
+                    
     
