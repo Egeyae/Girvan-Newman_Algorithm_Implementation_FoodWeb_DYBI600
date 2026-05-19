@@ -1,0 +1,9 @@
+# prop_name, value
+name,football_tsevans
+description,"A network of American football games between Division IA colleges during regular season Fall 2000. This version contains some corrections made by T. S. Evans, in particular:
+
+There are are two issues with the original GN file. First three teams met twice in one season so the graph is not simple. This is easily dealt with if required. Secondly, the assignments to conferences, the node values, seem to be for the 2001 season and not the 2000 season. The games do appear to be for the 2000 season as stated. For instance the Big West conference existed for football till 2000 while the Sun Belt conference was only started in 2001. Also there were 11 conferences and 5 independents in 2001 but 10 conferences and 8 independents in 2000. I have provided a set of files footballTSE* which define a simple graph with the correct conference assignments in the archive here."
+citation,"['M. Girvan and M. E. J. Newman, \"Community structure in social and biological networks.\" Proc. Natl. Acad. Sci. USA 99(12), 7821-7826 (2002). arxiv:cond-mat/0112110, http://www-personal.umich.edu/~mejn/netdata/', 'T.S. Evans, \"Clique Graphs and Overlapping Communities\", J. Stat. Mech. (2010) P12037, https://doi.org/10.1088/1742-5468/2010/12/P12037']"
+url,https://figshare.com/articles/American_College_Football_Network_Files/93179
+tags,"['Social', 'Sports', 'Unweighted']"
+directed,0.0

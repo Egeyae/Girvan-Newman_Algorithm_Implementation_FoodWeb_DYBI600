@@ -10,40 +10,82 @@ def load_karate():
     groups = {}
     karate_graph = g.Graph(name="Karate dataset")
 
-    #Open the first csv file where the vertices are in.
+    # Open the first csv file where the vertices are in.
     with open("data/Karate_club_dataset/nodes.csv") as fnodes:
         nodes = csv.reader(fnodes)
 
-        #Skip the first line with the columns names.
+        # Skip the first line with the columns names.
         next(nodes)
 
-        #For each line :
+        # For each line :
         for line in nodes:
-            #Add the vertex.
+            # Add the vertex.
             karate_graph.add_vertex(line[1])
 
-            #Add in which community is in.
+            # Add in which community is in.
             if line[2] not in groups.keys():
                 groups[line[2]] = [line[1]]
             else :
                 groups[line[2]].append(line[1])
     
-    #Open the second csv file with the edges.
+    # Open the second csv file with the edges.
     with open("data/Karate_club_dataset/edges.csv") as fedges :
         edges = csv.reader(fedges)
 
-        #Skip the first line with the columns names.
+        # Skip the first line with the columns names.
         next(edges)
         # For each line :
         for line in edges:
 
-            #Add the edge with + 1, because in the file index are used and not name.
+            # Add the edge with + 1, because in the file index are used and not name.
             karate_graph.add_edge(str(int(line[0])+1), str(int(line[1])+1))
     
     return karate_graph, groups
+
+def load_college_football():
+    """
+        Function to load the college football network dataset. Will return the graph and the groups in the graph.
+    """
+
+    # Initilaze dict and graph.
+    groups = {}
+    college_football_graph = g.Graph(name="College_football_dataset")
+
+    # Open the first csv file where the vertices are in.
+    with open("data/NCAA_college_football_2000_dataset/nodes.csv") as fnodes:
+        nodes = csv.reader(fnodes)
+        next(nodes)
+
+        # For each line : 
+        for line in nodes:
+            # Add the vertex.
+            college_football_graph.add_vertex(line[1])
+
+            # Add in which community is in.
+            if line[2] not in groups.keys():
+                groups[line[2]] = [line[1]]
+            else :
+                groups[line[2]].append(line[1])
+
+    # Open the second csv file with the edges.
+
+    with open("data/NCAA_college_football_2000_dataset/edges.csv") as fedges :
+        edges = csv.reader(fedges)
+
+        # Skip the first line with the columns names.
+        next(edges)
+        # For each line :
+        for line in edges:
+            # Add the edge with + 1, because in the file index are used and not name.
+            college_football_graph.add_edge(college_football_graph.get_vertex(int(line[0])), college_football_graph.get_vertex(int(line[1])))
+    
+    return college_football_graph, groups
 
 
 if __name__ == "__main__":            
     karate_graph, groups = load_karate()
 
-    karate_graph.plot(labels=True)
+    college_graph, groups2 = load_college_football()
+    print(groups2)
+    college_graph.plot()
+    #karate_graph.plot(labels=True)
