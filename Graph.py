@@ -154,8 +154,8 @@ class Graph :
 
         return self.vertices.index(vertex)
     
-    def plot(self, k: int = 2500, desired: float = 0.15, repulsion: float = 0.2,
-          attraction: float = 0.2, title: str|None = None, labels: bool = False, colors: list|None = None,
+    def plot(self, k: int = 2500, desired: float = 0.2, repulsion: float = 0.2,
+          attraction: float = 0.3, title: str|None = None, labels: bool = False, colors: list|None = None,
           output: str|None = None, show: bool = True):
         """
         Compute positions then save and/or show the resulting plot
@@ -199,9 +199,9 @@ class Graph :
                     dy = positions[i][1] - positions[j][1]
                     dist2 = max(0.001, (dx*dx + dy*dy))
                     dist = sqrt(dist2)
-                    force = repulsion / dist2
-                    change_vectors[i][0] += dx/dist * force * 0.1
-                    change_vectors[i][1] += dy/dist * force * 0.1
+                    force = repulsion / (dist2*dist2 + 1)
+                    change_vectors[i][0] += dx/dist * force * 0.01
+                    change_vectors[i][1] += dy/dist * force * 0.01
 
                 # Attraction
                 for n in neighbors:
@@ -209,9 +209,9 @@ class Graph :
                     dx = positions[i][0] - positions[j][0]
                     dy = positions[i][1] - positions[j][1]
                     dist = max(0.01, sqrt((dx*dx + dy*dy)))
-                    force = attraction * (dist - desired)
-                    change_vectors[i][0] += -dx/dist * force * 0.1
-                    change_vectors[i][1] += -dy/dist * force * 0.1
+                    force = attraction * (dist**4 - desired)
+                    change_vectors[i][0] += -dx/dist * force * 0.2
+                    change_vectors[i][1] += -dy/dist * force * 0.2
 
             for i in range(self.nb_vertices):
                 positions[i][0] += change_vectors[i][0]
@@ -224,7 +224,7 @@ class Graph :
 
         col = colors or ['blue' for _ in range(self.nb_vertices)]
         
-        ax.scatter(x, y, c=col, s=40)
+        ax.scatter(x, y, c=col, s=200)
 
         for i, vi in enumerate(self.vertices):
             for vj in self.neighborhoods[vi]:
@@ -232,59 +232,13 @@ class Graph :
                 ax.plot([x[i], x[j]], [y[i], y[j]], 'k-', alpha=0.2)
 
         ax.set_title(t)
-
         if labels:
-            ax = [ax.annotate(txt, (x[i],y[i])) for i, txt in enumerate(self.vertices)]
-            adjust_text(ax)
+            ax = [ax.annotate(txt, (x[i]-0.044,y[i]-0.038)) for i, txt in enumerate(self.vertices)]
+            # adjust_text(ax)
 
         if output:
             fig.savefig(output, dpi=300, bbox_inches='tight')
             plt.close(fig)
         if show:
             plt.show()
-    
-
-def random_graph(nb_communities : int, nb_vertices : int, e : float = 0.80, k :float = 0.20 ):
-    """
-    Fonction to create a random graph with a determined number of communities and vertices. 
-    e and k are parameters for the probability to have an edge between vertices. Return the graph created.
-    Args :
-        nb_communities : Number of communities desired in the graph.
-        nb_vertices : Number of vertices in the graph desired.
-        e : Probility of an edge between two vertices of the same communitiy. Default : 0.8
-        k : Probability of an edge between two vertices in different communities. Default : 0.2
-    """
-    if 2*nb_communities > nb_vertices :
-        raise ValueError("The number of communities is superior to the number of vertices")
-    name = f"Graph_r_com{nb_communities}_v{nb_vertices}"
-    graph = Graph(name)
-    i = 0
-    communities = {x :[] for x in range(1,(nb_communities+1))}
-    while i<nb_vertices:
-        graph.add_vertex(str(i))
-        key = randint(1,nb_communities+1)
-        communities[key].append(str(i))
-        i += 1
-    
-    for l in communities.keys():
-        if len(communities[l]) == 0:
-            return random_graph(nb_communities, nb_vertices,e,k)
-        else :
-            for v in communities[l]:
-                for v2 in communities[l] :
-                    p = random()
-                    if p < e and v != v2:
-                        graph.add_edge(v,v2)
-
-    for l in communities.keys():
-        for l2 in communities.keys():
-            if l != l2 :
-                for v in communities[l]:
-                    for v2 in communities[l2]:
-                        p = random()
-                        if p < k :
-                            graph.add_edge(v,v2)
-
-    return graph, communities
-                    
     
