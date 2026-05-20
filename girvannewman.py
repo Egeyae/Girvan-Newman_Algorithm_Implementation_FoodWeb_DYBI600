@@ -1,5 +1,4 @@
 from Graph import Graph
-from adjustText import adjust_text
 
 """
 TODO list:
@@ -104,7 +103,6 @@ def modularity(g_original, partition):
 
     return Q/(4*m)
             
-
 def bfs(g_current, source):
     distances = {}
     nb_paths = {}
@@ -149,7 +147,6 @@ def connexion(g):
             visited.update(composed)
             partition.append(composed)
     return partition 
-
 
 def _modularity(g: Graph):
     best_Q = -100
