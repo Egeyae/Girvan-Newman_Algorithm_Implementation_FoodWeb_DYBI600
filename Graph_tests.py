@@ -1,5 +1,6 @@
 from Graph import Graph
 from random import choices
+from girvannewman import _modularity
 
 g = Graph()
 
@@ -43,4 +44,6 @@ g.add_edge("X","Z")
 
 g.plot(k=5000, labels=True, colors=choices(["blue", "red", "yellow", "green", "grey"], k=g.nb_vertices))
 
-
+partition = [{"A","B"}, {"C","D"}]
+Q = _modularity(g, partition)
+print(f"Q bonne partition : {Q}")

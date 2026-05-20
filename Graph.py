@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from random import random, randint
 from math import sqrt
+from adjustText import adjust_text
 
 class Graph :
     """

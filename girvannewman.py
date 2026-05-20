@@ -1,4 +1,5 @@
 from Graph import Graph
+from adjustText import adjust_text
 
 """
 TODO list:
@@ -78,7 +79,7 @@ def modularity(g_original, partition):
 
     degrees = {}
 
-    for vertex in range(g_original.get_vertices):
+    for vertex in g_original.vertices:
         degrees[vertex] = g_original.get_length_neighborhood(vertex)
 
     communitie_part ={}
@@ -88,8 +89,8 @@ def modularity(g_original, partition):
 
     Q = 0
 
-    for i in range(g_original.nb_edges):
-        for j in range(g_original.nb_edges) :
+    for i in g_original.vertices:
+        for j in g_original.vertices :
             if communitie_part[i] == communitie_part[j]:
                 sij = 1
             else:
@@ -109,7 +110,7 @@ def bfs(g_current, source):
     nb_paths = {}
     befores ={}
 
-    for v in g_current.verices:
+    for v in g_current.vertices:
         distances[v] = -1
         nb_paths[v] = 0
         befores[v] = []
@@ -156,7 +157,8 @@ def _modularity(g: Graph):
 
     while g.nb_edged > 0:
         betweenness = brandes(g)
-        (u,v) = max(betweenness, key = lambda vertex : betweenness[vertex])
+        edge = max(betweenness, key=lambda e: betweenness[e])
+        u, v = edge.split('.')
         g.remove_edge(u,v)
         partition = connexion(g)
         Q = modularity(g, partition)
@@ -166,6 +168,18 @@ def _modularity(g: Graph):
             best_partition = partition
     return best_partition, best_Q
 
+g = Graph()
+g.add_vertex("A")
+g.add_vertex("B")
+g.add_vertex("C")
+g.add_vertex("D")
+g.add_edge("A", "B")
+g.add_edge("C", "D")
+
+# On teste modularity avec une bonne partition
+partition = [{"A","B"}, {"C","D"}]
+Q = modularity(g, partition)
+print(f"Q bonne partition : {Q}")
 
 def _dendrogram(g: Graph):
     pass
