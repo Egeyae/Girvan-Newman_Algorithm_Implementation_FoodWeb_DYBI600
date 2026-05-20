@@ -101,7 +101,7 @@ def modularity(g_original, partition):
                 A_ij = 1
             else :
                 A_ij = 0
-            calcul = (A_ij -(degrees[i] *degrees[j])/(2*m) *sij)
+            calcul = (A_ij -(degrees[i] *degrees[j])/(2*m)) *sij
             Q+= calcul
 
     return Q/(4*m)
@@ -154,13 +154,26 @@ def _modularity(g: Graph):
     best_Q = -100
     best_partition = None 
 
-    while g.nb_edged > 0:
+    g_current = Graph()
+    for v in g.vertices:
+        g_current.add_vertex(v)
+    for i in g.vertices:
+        for v in g.get_neighborhood(i):
+            if v not in g_current.get_neighborhood(i):
+                g_current.add_edge(i,v)
+
+    while g_current.nb_edges > 0:
         betweenness = brandes(g)
         edge = max(betweenness, key=lambda e: betweenness[e])
         u, v = edge.split('.')
-        g.remove_edge(u,v)
+        if v in g_current.get_neighborhood(u):
+            g_current.remove_edge(u, v)
+        elif u in g_current.get_neighborhood(v):
+            g_current.remove_edge(v, u)
+        else:
+            break
         partition = connexion(g)
-        Q = modularity(g, partition)
+        Q = modularity(g_current, partition)
 
         if Q > best_Q :
             best_Q = Q
@@ -296,3 +309,22 @@ if __name__ == '__main__':
     #     print(f"{e} = {c}")
 
     # karate_graph.plot(labels=True)
+    #karate_graph.plot(labels=True)
+
+#test
+best_partition, best_Q = _modularity(karate_graph)
+print(f"Meilleur Q : {best_Q}")
+print(f"Nombre de communautés : {len(best_partition)}")
+
+colors = {}
+color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
+for i, community in enumerate(best_partition):
+    for vertex in community:
+        colors[vertex] = color_list[i % len(color_list)]
+
+karate_graph.plot(
+    labels=True,
+    colors=[colors[v] for v in karate_graph.vertices]
+)
+
+    
