@@ -103,7 +103,6 @@ def modularity(g_original, partition):
 
     return Q/(4*m)
             
-
 def bfs(g_current, source):
     distances = {}
     nb_paths = {}
@@ -163,7 +162,6 @@ def connexion(g):
             partition.append(composed)
     return partition 
 
-
 def _modularity(g: Graph):
     best_Q = -100
     best_partition = None 
@@ -179,7 +177,6 @@ def _modularity(g: Graph):
             best_Q = Q
             best_partition = partition
     return best_partition, best_Q
-
 
 def _dendrogram(g: Graph):
     pass
