@@ -242,3 +242,41 @@ class Graph :
         if show:
             plt.show()
     
+    def get_connected_components(self):
+        if self.nb_vertices == 0:
+            return None
+
+        visited = []
+        components = []
+
+        for v in self.vertices:
+            if v in visited:
+                continue
+
+            Q = [v]
+            components.append(list())
+            
+
+            while len(Q) > 0:
+                curr = Q.pop(0)
+                visited.append(curr)
+                components[-1].append(curr)
+
+                for x in self.get_neighborhood(curr):
+                    if x not in visited:
+                        Q.append(x)
+        return components
+
+
+
+if __name__ == '__main__':
+    g = Graph()
+    g.add_vertex("A")
+    g.add_vertex("B")
+    g.add_vertex("C")
+
+    g.add_edge("A", "B")
+    g.add_edge("B", "C")
+
+    print(g.get_connected_components())
+

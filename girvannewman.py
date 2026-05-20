@@ -1,4 +1,7 @@
 from Graph import Graph
+from scipy.cluster.hierarchy import dendrogram
+import matplotlib.pyplot as plt
+from copy import deepcopy
 
 """
 TODO list:
@@ -135,7 +138,6 @@ def bfs(g_current, source):
     return distances, nb_paths, befores, order_visited 
 
 def connexion(g):
-
     visited = set()
     partition= []
     composed = []
@@ -165,21 +167,75 @@ def _modularity(g: Graph):
             best_partition = partition
     return best_partition, best_Q
 
-g = Graph()
-g.add_vertex("A")
-g.add_vertex("B")
-g.add_vertex("C")
-g.add_vertex("D")
-g.add_edge("A", "B")
-g.add_edge("C", "D")
+# g = Graph()
+# g.add_vertex("A")
+# g.add_vertex("B")
+# g.add_vertex("C")
+# g.add_vertex("D")
+# g.add_edge("A", "B")
+# g.add_edge("C", "D")
 
-# On teste modularity avec une bonne partition
-partition = [{"A","B"}, {"C","D"}]
-Q = modularity(g, partition)
-print(f"Q bonne partition : {Q}")
+# # On teste modularity avec une bonne partition
+# partition = [{"A","B"}, {"C","D"}]
+# Q = modularity(g, partition)
+# print(f"Q bonne partition : {Q}")
+
 
 def _dendrogram(g: Graph):
-    pass
+    g_copy = deepcopy(g)
+
+    edge_removal_order = []
+
+    while g_copy.nb_edges > 0:
+        betweenness = brandes(g_copy)
+
+        max_betweeness = max(betweenness.items(), key = lambda x: x[1])[0]
+
+        u,v = max_betweeness.split(".")
+
+        edge_removal_order.append((u, v))
+
+        g_copy.remove_edge(u, v)
+
+
+    # the goal of the following operation is to build a linkage matrix for the dendrogram function
+    linkage_matrix = []
+
+    clusters = [{v} for v in g_copy.vertices]
+    clusters_height = [1.0 for _ in g_copy.vertices]
+    vertex_cluster_index = {v:i for i,v in enumerate(g_copy.vertices)}
+
+
+    # for any further new clusters, the next index
+    next_cluster_index = len(g_copy.vertices)
+
+
+    for i, (u,v) in enumerate(edge_removal_order[::-1]):
+        u_cluster = vertex_cluster_index[u]
+        v_cluster = vertex_cluster_index[v]
+
+        # If the clusters of u and v are different, then it must mean that they get joined by the current edge
+        # If they are equal <=> u and v are in the same cluster and dont change the dendrogram (no separation of communities)
+        if u_cluster != v_cluster:
+            clusters.append(clusters[u_cluster]|clusters[v_cluster])
+            clusters_height.append(clusters_height[u_cluster]+clusters_height[v_cluster])
+
+            for j in clusters[-1]:
+                vertex_cluster_index[j] = next_cluster_index
+            next_cluster_index += 1
+
+            linkage_matrix.append([
+                u_cluster, # the 2 clusters that are merged
+                v_cluster,
+                clusters_height[-1], # the height of the merge
+                len(clusters[-1])]  # the new size of the cluster merge
+                )
+
+    dendrogram(linkage_matrix, orientation="left", labels=g_copy.vertices)
+    plt.show()
+
+
+
 
 def _communities(g: Graph, k: int):
     pass
@@ -218,6 +274,9 @@ if __name__ == '__main__':
 
     # g.add_edge("C", "D")
 
+    from loader import load_karate
+    girvannewman(load_karate()[0], method="dendrogram")
+
 
 
     # print(list(set(("1", "2"))))
@@ -229,11 +288,11 @@ if __name__ == '__main__':
 
     # g.plot(labels=True)
 
-    from loader import load_karate
+    # from loader import load_karate
 
-    karate_graph, groups = load_karate()
+    # karate_graph, groups = load_karate()
 
-    for e,c in sorted(brandes(karate_graph).items(), key=lambda x: x[1]):
-        print(f"{e} = {c}")
+    # for e,c in sorted(brandes(karate_graph).items(), key=lambda x: x[1]):
+    #     print(f"{e} = {c}")
 
-    karate_graph.plot(labels=True)
+    # karate_graph.plot(labels=True)
