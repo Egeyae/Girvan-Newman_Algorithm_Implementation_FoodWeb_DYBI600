@@ -232,9 +232,6 @@ class Graph :
                 ax.plot([x[i], x[j]], [y[i], y[j]], 'k-', alpha=0.2)
 
         ax.set_title(t)
-        if labels:
-            ax = [ax.annotate(txt, (x[i],y[i])) for i, txt in enumerate(self.vertices)]
-            adjust_text(ax)
 
         if labels:
             ax = [ax.annotate(txt, (x[i],y[i])) for i, txt in enumerate(self.vertices)]
