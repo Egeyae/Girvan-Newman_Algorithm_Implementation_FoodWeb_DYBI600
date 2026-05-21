@@ -138,12 +138,11 @@ def connexion(g):
 
     visited = set()
     partition= []
-    composed = []
     for vertex in g.vertices : 
+        composed = []
         if vertex not in visited : 
             distances, nb_paths, befores, order_visited = bfs(g, vertex)
-            if distances[vertex] != -1 :
-                composed.append(vertex)
+            composed = {v for v in g.vertices if distances[v] != -1}
             visited.update(composed)
             partition.append(composed)
     return partition 
@@ -161,7 +160,7 @@ def _modularity(g: Graph):
                 g_current.add_edge(i,v)
 
     while g_current.nb_edges > 0:
-        betweenness = brandes(g)
+        betweenness = brandes(g_current)
         edge = max(betweenness, key=lambda e: betweenness[e])
         u, v = edge.split('.')
         if v in g_current.get_neighborhood(u):
@@ -170,8 +169,8 @@ def _modularity(g: Graph):
             g_current.remove_edge(v, u)
         else:
             break
-        partition = connexion(g)
-        Q = modularity(g_current, partition)
+        partition = connexion(g_current)
+        Q = modularity(g, partition)
 
         if Q > best_Q :
             best_Q = Q
@@ -240,8 +239,8 @@ if __name__ == '__main__':
 
 #test
 best_partition, best_Q = _modularity(karate_graph)
-print(f"Meilleur Q : {best_Q}")
-print(f"Nombre de communautés : {len(best_partition)}")
+print(best_partition)
+
 
 colors = {}
 color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
