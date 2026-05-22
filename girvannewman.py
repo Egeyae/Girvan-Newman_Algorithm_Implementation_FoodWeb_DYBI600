@@ -2,7 +2,6 @@ from Graph import Graph
 from scipy.cluster.hierarchy import dendrogram
 import matplotlib.pyplot as plt
 from copy import deepcopy
-
 """
 TODO list:
     - Compute betweeness
@@ -273,9 +272,9 @@ def _communities(g: Graph, k: int):
 def girvannewman(g: Graph, method: str="modularity", k: int|None = None):
     match method:
         case "modularity":
-            _modularity(g)
+            return _modularity(g)
         case "dendrogram":
-            _dendrogram(g)
+            return _dendrogram(g)
         case "communities":
             return _communities(g, k)
         case _:
