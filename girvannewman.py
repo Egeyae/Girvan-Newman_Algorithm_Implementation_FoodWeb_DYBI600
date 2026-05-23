@@ -152,6 +152,7 @@ def connexion(g):
 def _modularity(g: Graph, return_graph: bool = False):
     best_Q = -100
     best_partition = None 
+    modularity_list = []
 
     g_current = Graph()
     for v in g.vertices:
@@ -173,6 +174,7 @@ def _modularity(g: Graph, return_graph: bool = False):
             break
         partition = connexion(g_current)
         Q = modularity(g, partition)
+        modularity_list.append(Q)
 
         if Q > best_Q :
             best_Q = Q
@@ -364,19 +366,27 @@ if __name__ == '__main__':
     #karate_graph.plot(labels=True)
 
 #test
-#best_partition, best_Q = _modularity(karate_graph)
-#print(best_partition)
+best_partition, best_Q, Q_values = _modularity(karate_graph)
+print(best_partition)
 
+fig, ax = plt.subplots()
+ax.plot(Q_values)
+ax.set_xlabel("edges erased")
+ax.set_ylabel("Q modularity")
+ax.set_title("Evolution of Q")
+ax.axhline(y=best_Q, color='red', linestyle='--', label=f"Best Q = {best_Q:.3f}")
+ax.legend()
+plt.show()
 
-#colors = {}
-#color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
-#for i, community in enumerate(best_partition):
-    #for vertex in community:
-        #colors[vertex] = color_list[i % len(color_list)]
+colors = {}
+color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
+for i, community in enumerate(best_partition):
+    for vertex in community:
+        colors[vertex] = color_list[i % len(color_list)]
 
-#karate_graph.plot(
-    #labels=True,
-    #colors=[colors[v] for v in karate_graph.vertices]
-#)
+karate_graph.plot(
+    labels=True,
+    colors=[colors[v] for v in karate_graph.vertices]
+)
 
     
