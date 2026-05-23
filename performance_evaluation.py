@@ -165,6 +165,8 @@ def test_method(method = "communities",
 
                         f.write(f"{c},{v},{int(e*100)},{int(k*100)},{precision},{recall}\n")
 
+    return fname
+
 
 if __name__ == '__main__':
     test_method()
