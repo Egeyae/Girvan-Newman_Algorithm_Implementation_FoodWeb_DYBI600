@@ -1,6 +1,7 @@
 from Graph import Graph
 from girvannewman import girvannewman
 import os
+from random import randint, random
 
 
 def random_graph(nb_communities : int, nb_vertices : int, e : float = 0.80, k :float = 0.20, additional_name: str|None = None):
@@ -22,7 +23,7 @@ def random_graph(nb_communities : int, nb_vertices : int, e : float = 0.80, k :f
     i = 0
     while i<nb_vertices:
         graph.add_vertex(str(i))
-        key = randint(1,nb_communities+1)
+        key = randint(1,nb_communities)
         communities[key].append(str(i))
         i += 1
     
@@ -48,7 +49,7 @@ def random_graph(nb_communities : int, nb_vertices : int, e : float = 0.80, k :f
 
     return graph, communities
 
-def compute_precision_recall(communities: dict, expected_communities: dict):
+def compute_precision_recall(communities: list | dict, expected_communities: list | dict):
     """
     Computes precision and recall for community detection
     Uses a greedy algorithm to match communities based on Jaccard Similarity
@@ -60,53 +61,59 @@ def compute_precision_recall(communities: dict, expected_communities: dict):
     Returns:
         precision and recall
     """
-    def jaccard_similarity(c: set, ec: set) -> float:
+    if isinstance(communities, list):
+        communities = {i: set(v) for i, v in enumerate(communities)}
+    else:
+        communities = {k: set(v) for k, v in communities.items()}
+
+    if isinstance(expected_communities, list):
+        expected_communities = {i: set(v) for i, v in enumerate(expected_communities)}
+    else:
+        expected_communities = {k: set(v) for k, v in expected_communities.items()}
+
+    def jaccard_similarity(c, ec):
         union = len(c.union(ec))
         return len(c.intersection(ec)) / union if union > 0 else 0.0
 
-    # Computes Jaccard similarity between all possible (c, ec) pairs
-    all_scores = {}
-    for c in communities:
-        for ec in expected_communities:
-            all_scores[(c, ec)] = jaccard_similarity(communities[c], expected_communities[ec])
+    # Greedy matching
+    all_scores = {(c, ec): jaccard_similarity(communities[c], expected_communities[ec])
+                  for c in communities for ec in expected_communities}
 
-    matched_pairs = set()
-    correct_community_total = 0 # true positives
-    invalid_community_total = 0 # false positives
-    missed_community_total = 0  # false negatives
+    matched_detected = set()
+    matched_expected = set()
+    correct = invalid = missed = 0
 
-    # greedily match c and ec based on max Jaccard similarity
     while all_scores:
-        (c, ec), score = max(all_scores.items(), key=lambda x: x[1])
-
+        (c, ec), _ = max(all_scores.items(), key=lambda x: x[1])
         detected = communities[c]
         expected = expected_communities[ec]
 
-        correct = len(detected.intersection(expected))
-        invalid = len(detected - expected)
-        missed = len(expected - detected)
+        correct += len(detected & expected)
+        invalid += len(detected - expected)
+        missed += len(expected - detected)
 
-        correct_community_total += correct
-        invalid_community_total += invalid
-        missed_community_total += missed
+        matched_detected.add(c)
+        matched_expected.add(ec)
+        all_scores = {k: v for k, v in all_scores.items() if k[0] not in matched_detected and k[1] not in matched_expected}
 
-        # Remove matched communities
-        to_remove = [k for k in all_scores if k[0] == c or k[1] == ec]
-        for k in to_remove:
-            del all_scores[k]
+    # Account for unmatched communities
+    for c in communities:
+        if c not in matched_detected:
+            invalid += len(communities[c])
+    for ec in expected_communities:
+        if ec not in matched_expected:
+            missed += len(expected_communities[ec])
 
-    # Compute precision and recall
-    precision = correct_community_total / (correct_community_total + invalid_community_total) if (correct_community_total + invalid_community_total) > 0 else 0.0
-    recall = correct_community_total / (correct_community_total + missed_community_total) if (correct_community_total + missed_community_total) > 0 else 0.0
-
+    precision = correct / (correct + invalid) if (correct + invalid) > 0 else 0.0
+    recall = correct / (correct + missed) if (correct + missed) > 0 else 0.0
     return precision, recall       
 
 
 def test_method(method = "communities", 
     communities_range: tuple[int, int, int] = (2, 5, 1), 
-    vertices_range: tuple[int, int, int] = (10, 50, 5), 
-    e_range: tuple[int, int, int] = (10, 90, 10),
-    k_range: tuple[int, int, int] = (10, 90, 10),
+    vertices_range: tuple[int, int, int] = (10, 50, 10), 
+    e_range: tuple[int, int, int] = (80, 90, 10),
+    k_range: tuple[int, int, int] = (10, 30, 10),
     n = 10
     ):
     """
@@ -143,7 +150,10 @@ def test_method(method = "communities",
                             graph, expected_communities = random_graph(c, v, e, k)
 
                             # here the c describes the number of expected communities, used by the function if the method is set to "communities"
-                            detected_communities = girvannewman(g, method, c)
+                            if method == "communities":
+                                detected_communities = girvannewman(graph, method, c)
+                            else:
+                                detected_communities, _ = girvannewman(graph, method, c)
 
                             p, r = compute_precision_recall(detected_communities, expected_communities)
 
@@ -154,3 +164,7 @@ def test_method(method = "communities",
                         recall /= n
 
                         f.write(f"{c},{v},{int(e*100)},{int(k*100)},{precision},{recall}\n")
+
+
+if __name__ == '__main__':
+    test_method()

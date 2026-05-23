@@ -3,6 +3,7 @@ from random import random, randint
 from math import sqrt
 from adjustText import adjust_text
 
+
 class Graph :
     """
     Class used to represent a Graph in our project

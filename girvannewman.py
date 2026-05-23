@@ -149,7 +149,7 @@ def connexion(g):
             partition.append(composed)
     return partition 
 
-def _modularity(g: Graph):
+def _modularity(g: Graph, return_graph: bool = False):
     best_Q = -100
     best_partition = None 
 
@@ -177,27 +177,22 @@ def _modularity(g: Graph):
         if Q > best_Q :
             best_Q = Q
             best_partition = partition
-    return best_partition, best_Q
 
-# g = Graph()
-# g.add_vertex("A")
-# g.add_vertex("B")
-# g.add_vertex("C")
-# g.add_vertex("D")
-# g.add_edge("A", "B")
-# g.add_edge("C", "D")
-
-# # On teste modularity avec une bonne partition
-# partition = [{"A","B"}, {"C","D"}]
-# Q = modularity(g, partition)
-# print(f"Q bonne partition : {Q}")
+    if not return_graph:
+        return best_partition, best_Q
+    else:
+        return best_partition, best_Q, g_current
 
 
-def _dendrogram(g: Graph):
+def _dendrogram(g: Graph, height_method: str|None = None):
+    assert height_method in (None, "modularity")
+
+    # make a copy of g, so we can make all modifications we want
     g_copy = deepcopy(g)
 
     edge_removal_order = []
 
+    # apply girvan-newman up until no edges remain
     while g_copy.nb_edges > 0:
         betweenness = brandes(g_copy)
 
@@ -211,10 +206,11 @@ def _dendrogram(g: Graph):
 
 
     # the goal of the following operation is to build a linkage matrix for the dendrogram function
+    # the linkage matrix describes how the dendrogram() function should build and group clusters
     linkage_matrix = []
 
     clusters = [{v} for v in g_copy.vertices]
-    clusters_height = [1.0 for _ in g_copy.vertices]
+    clusters_height = [1.0 if height_method is None else 0.0 for _ in g_copy.vertices]
     vertex_cluster_index = {v:i for i,v in enumerate(g_copy.vertices)}
 
 
@@ -226,11 +222,24 @@ def _dendrogram(g: Graph):
         u_cluster = vertex_cluster_index[u]
         v_cluster = vertex_cluster_index[v]
 
+        g_copy.add_edge(u,v)
+
         # If the clusters of u and v are different, then it must mean that they get joined by the current edge
         # If they are equal <=> u and v are in the same cluster and dont change the dendrogram (no separation of communities)
         if u_cluster != v_cluster:
             clusters.append(clusters[u_cluster]|clusters[v_cluster])
-            clusters_height.append(clusters_height[u_cluster]+clusters_height[v_cluster])
+
+            if height_method is None:
+                clusters_height.append(clusters_height[u_cluster]+clusters_height[v_cluster])
+            elif height_method == "modularity":
+                partition = dict()
+
+                for v, j in vertex_cluster_index.items():
+                    if j not in partition.keys():
+                        partition[j] = []
+                    partition[j].append(v)
+
+                clusters_height.append(1 - modularity(g_copy, list(partition.values())))
 
             for j in clusters[-1]:
                 vertex_cluster_index[j] = next_cluster_index
@@ -247,9 +256,7 @@ def _dendrogram(g: Graph):
     plt.show()
 
 
-
-
-def _communities(g: Graph, k: int):
+def _communities(g: Graph, k: int, return_graph: bool = False):
     g_copy = deepcopy(g)
 
     while g_copy.nb_edges != 0:
@@ -266,18 +273,25 @@ def _communities(g: Graph, k: int):
         partition = connexion(g_copy)
 
         if len(partition) >= k :
-            return partition
-    return partition
+            if not return_graph:
+                return partition
+            else:
+                return partition, g_copy
+
+    if not return_graph:
+        return partition
+    else:
+        return partition, g_copy
 
 
-def girvannewman(g: Graph, method: str="modularity", k: int|None = None):
+def girvannewman(g: Graph, method: str="modularity", k: int|None = None, height_method: str|None = None, return_graph: bool = False):
     match method:
         case "modularity":
-            _modularity(g)
+            return _modularity(g)
         case "dendrogram":
-            _dendrogram(g)
+            _dendrogram(g, height_method=height_method)
         case "communities":
-            return _communities(g, k)
+            return _communities(g, k, return_graph=return_graph)
         case _:
             raise ValueError("Method is not valid, should be 'modularity', 'dendrogram' or 'communities'")
 
@@ -306,22 +320,27 @@ if __name__ == '__main__':
     from loader import load_karate
     #girvannewman(load_karate()[0], method="dendrogram")
     karate_graph = load_karate()[0]
-    partition = girvannewman(karate_graph, method="communities", k=5)
+    # partition, q = girvannewman(karate_graph, method="modularity", k=2, return_graph=True)
+    # partition = girvannewman(karate_graph, method="communities", k=2)
+    girvannewman(karate_graph, method="dendrogram")
 
-    print(f"Numebr of communities : {len(partition)}")
-    for i, community in enumerate(partition):
-        print(f"Community {i} : {community}")
+    # print("Plotting")
+    # colors = {}
+    # color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
+    # for i, community in enumerate(partition):
+    #     for vertex in community:
+    #         colors[vertex] = color_list[i % len(color_list)]
 
-    colors = {}
-    color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
-    for i, community in enumerate(partition):
-        for vertex in community:
-            colors[vertex] = color_list[i % len(color_list)]
+    # karate_graph.plot(
+    #     labels=True,
+    #     colors=[colors[v] for v in karate_graph.vertices]
+    # )
 
-    karate_graph.plot(
-        labels=True,
-        colors=[colors[v] for v in karate_graph.vertices]
-    )
+    # print(f"Numebr of communities : {len(partition)}")
+    # for i, community in enumerate(partition):
+    #     print(f"Community {i} : {community}")
+
+    
 
 
 
