@@ -3,6 +3,7 @@ from random import random, randint
 from math import sqrt
 from adjustText import adjust_text
 
+
 class Graph :
     """
     Class used to represent a Graph in our project
@@ -155,10 +156,11 @@ class Graph :
         return self.vertices.index(vertex)
     
     def plot(self, k: int = 2500, desired: float = 0.2, repulsion: float = 0.2,
-          attraction: float = 0.3, title: str|None = None, labels: bool = False, colors: list|None = None,
-          output: str|None = None, show: bool = True):
+          attraction: float = 0.3, title: str|None = None, labels: bool = False,
+          colors: list|None = None, output: str|None = None, show: bool = True,
+          ax: plt.Axes|None = None):
         """
-        Compute positions then save and/or show the resulting plot
+        Compute positions then save and/or show the resulting plot.
 
         Args:
             k: number of iterations
@@ -166,29 +168,25 @@ class Graph :
             repulsion: repulsion force
             attraction: attraction force
             title: graph title, by default is the name of the Graph()
+            labels: whether to show vertex labels
+            colors: list of colors for vertices
             output: if provided, saves the plot to specified file
-            show: if True, display the graph (by default = True)
+            show: if True, display the graph (default: True)
+            ax: matplotlib Axes object to plot on. If None, creates a new figure.
         """
-
-        # We first put all vertices in random positions 
+        
+        # Compute positions (unchanged)
         positions = [[random(), random()] for _ in range(self.nb_vertices)]
-
-        # We use a set to easily get the neighbors and the non neighbors vertices
         all_vertices = set(self.vertices)
         t = title or self._name
-
-        # How much we should change the points each iterations
         change_vectors = [[0.0, 0.0] for _ in range(self.nb_vertices)]
 
-        # Loop k iterations
         for _ in range(k):
-            # Set the change vectors to 0, less computational intensive that creating a new list each time
             for i in range(self.nb_vertices):
                 change_vectors[i][0] = 0.0
                 change_vectors[i][1] = 0.0
 
-            # For each vertex we compute its change vector
-            for i,vi in enumerate(self.vertices):
+            for i, vi in enumerate(self.vertices):
                 neighbors = self.neighborhoods[vi]
                 not_neighbors = all_vertices - neighbors - {vi}
 
@@ -220,10 +218,16 @@ class Graph :
         x = [pos[0] for pos in positions]
         y = [pos[1] for pos in positions]
 
-        fig, ax = plt.subplots()
+        # Handle figure/axes
+        created_fig = False
+        if ax is None:
+            fig, ax = plt.subplots()
+            created_fig = True
+        else:
+            fig = ax.get_figure()
 
         col = colors or ['blue' for _ in range(self.nb_vertices)]
-        
+
         ax.scatter(x, y, c=col, s=200)
 
         for i, vi in enumerate(self.vertices):
@@ -233,13 +237,14 @@ class Graph :
 
         ax.set_title(t)
         if labels:
-            ax = [ax.annotate(txt, (x[i]-0.044,y[i]-0.038)) for i, txt in enumerate(self.vertices)]
-            # adjust_text(ax)
+            for i, txt in enumerate(self.vertices):
+                ax.annotate(txt, (x[i]-0.044, y[i]-0.038))
 
         if output:
             fig.savefig(output, dpi=300, bbox_inches='tight')
-            plt.close(fig)
-        if show:
+            if created_fig:
+                plt.close(fig)
+        if show and created_fig:
             plt.show()
     
     def get_connected_components(self):
