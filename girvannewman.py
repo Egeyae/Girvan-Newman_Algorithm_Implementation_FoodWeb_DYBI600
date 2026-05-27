@@ -158,23 +158,53 @@ def _modularity(g: Graph, return_graph: bool = False):
             if v not in g_current.get_neighborhood(i):
                 g_current.add_edge(i,v)
 
+    betweenness = brandes(g_current)
+
     while g_current.nb_edges > 0:
-        betweenness = brandes(g_current)
+        partition_before = connexion(g_current)
+
         edge = max(betweenness, key=lambda e: betweenness[e])
         u, v = edge.split('.')
+
         if v in g_current.get_neighborhood(u):
             g_current.remove_edge(u, v)
         elif u in g_current.get_neighborhood(v):
             g_current.remove_edge(v, u)
         else:
             break
-        partition = connexion(g_current)
-        Q = modularity(g, partition)
+
+        partition_after = connexion(g_current)
+
+        affected_edges = []
+        for community in partition_after:
+            if community not in partition_before:
+                affected_edges.append(community)
+        
+        for edges in affected_edges:
+
+            g_sub = Graph()
+            for vertex in edges:
+                g_sub.add_vertex(vertex)
+
+            edges_sub = set()
+            for vertex in edges :
+                for neighbor in g_current.get_neighborhood(vertex):
+                    g_sub.add_edge(vertex, neighbor)
+                    edges_sub.add((vertex, neighbor))
+            
+            sub_betweenness = brandes(g_sub)
+
+            for key, val in sub_betweenness.items():
+                betweenness[key] = val
+        
+        betweenness.pop(edge, None)
+
+        Q = modularity(g, partition_after)
         modularity_list.append(Q)
 
         if Q > best_Q :
             best_Q = Q
-            best_partition = partition
+            best_partition = partition_after
 
     if not return_graph:
         return best_partition, best_Q
@@ -310,7 +340,7 @@ def girvannewman(g: Graph, method: str="modularity",
     ax = None):
     match method:
         case "modularity":
-            return _modularity(g)
+            return _modularity(g, return_graph= return_graph)
         case "dendrogram":
             _dendrogram(g, height_method=height_method, communities=communities, colors = label_colors, title=title, ax=ax)
         case "communities":
@@ -405,4 +435,23 @@ if __name__ == '__main__':
     #colors=[colors[v] for v in karate_graph.vertices]
 #)
 
-    
+
+    from loader import load_karate
+    girvannewman(load_karate()[0], method="modularity", return_graph= False)
+    karate_graph = load_karate()[0]
+    partition = girvannewman(karate_graph, method="modularity", k=5)
+
+    print(f"Numebr of communities : {len(partition)}")
+    for i, community in enumerate(partition):
+        print(f"Community {i} : {community}")
+
+    colors = {}
+    color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
+    for i, community in enumerate(partition):
+        for vertex in community:
+            colors[vertex] = color_list[i % len(color_list)]
+
+    karate_graph.plot(
+        labels=True,
+        colors=[colors[v] for v in karate_graph.vertices]
+    )
