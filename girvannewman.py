@@ -177,9 +177,9 @@ def _modularity(g: Graph, return_graph: bool = False):
             best_partition = partition
 
     if not return_graph:
-        return best_partition, best_Q
+        return best_partition, best_Q, modularity_list
     else:
-        return best_partition, best_Q, g_current
+        return best_partition, best_Q, g_current, modularity_list
 
 
 def _dendrogram(
@@ -244,14 +244,13 @@ def _dendrogram(
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 6))
 
-    ax.cla()  # Clear the axis
+    ax.cla() # Clear the axis
 
-    # Plot dendrogram ON THE PROVIDED AXIS
     dendrogram(
         linkage_matrix,
         orientation="left",
         labels=g_copy.vertices,
-        ax=ax  # This is critical
+        ax=ax
     )
 
     if communities is not None:
