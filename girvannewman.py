@@ -104,18 +104,13 @@ def modularity(g_original, partition):
     Q = 0
 
     for i in g_original.vertices:
-        for j in g_original.vertices :
-            if communitie_part[i] == communitie_part[j]:
-                sij = 1
-            else:
-                sij = -1
+        for j in g_original.get_neighborhood(i) : #sij = 1 always because we arer lookign at the neighbors 
+            sij = 1
             if j in g_original.get_neighborhood(i):
                 A_ij = 1
             else :
                 A_ij = 0
-            calcul = (A_ij -(degrees[i] *degrees[j])/(2*m)) *sij
-            Q+= calcul
-
+            Q += (A_ij -(degrees[i] *degrees[j])/(2*m)) *sij
     return Q/(4*m)
             
 def bfs(g_current, source):
@@ -169,10 +164,16 @@ def _modularity(g: Graph, return_graph: bool = False):
     g_current = Graph()
     for v in g.vertices:
         g_current.add_vertex(v)
+    edges_added = set()
     for i in g.vertices:
         for v in g.get_neighborhood(i):
-            if v not in g_current.get_neighborhood(i):
+            if (v,i) not in edges_added : 
                 g_current.add_edge(i,v)
+                edges_added.add((i,v))
+
+
+    max_ = 5
+    no_improve = 0
 
     while g_current.nb_edges > 0:
         betweenness = brandes(g_current)
@@ -191,6 +192,12 @@ def _modularity(g: Graph, return_graph: bool = False):
         if Q > best_Q :
             best_Q = Q
             best_partition = partition
+            no_improve = 0
+        else : 
+            no_improve += 1
+            if no_improve >= max_ :
+                break
+            
 
     if not return_graph:
         return best_partition, best_Q
