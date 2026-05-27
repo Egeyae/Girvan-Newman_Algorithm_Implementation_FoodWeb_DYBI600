@@ -114,7 +114,7 @@ def comparison_modularit(g):
 from loader import load_karate
 g, groups = load_karate()
 
-print(comparison_communities(g, 2))
+print(comparison_modularit(g))
 
 
 def bis_dendogram(g):

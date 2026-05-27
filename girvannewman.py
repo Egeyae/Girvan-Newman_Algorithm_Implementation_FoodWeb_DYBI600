@@ -283,88 +283,88 @@ def girvannewman(g: Graph, method: str="modularity", k: int|None = None, height_
 
 if __name__ == '__main__':
     # Butterfly graph :-)
-    # g = Graph()
-    # g.add_vertex("A")
-    # g.add_vertex("B")
-    # g.add_vertex("C")
+    g = Graph()
+    g.add_vertex("A")
+    g.add_vertex("B")
+    g.add_vertex("C")
 
-    # g.add_edge("A", "B")
-    # g.add_edge("A", "C")
-    # g.add_edge("B", "C")
+    g.add_edge("A", "B")
+    g.add_edge("A", "C")
+    g.add_edge("B", "C")
 
-    # g.add_vertex("D")
-    # g.add_vertex("E")
-    # g.add_vertex("F")
+    g.add_vertex("D")
+    g.add_vertex("E")
+    g.add_vertex("F")
 
-    # g.add_edge("D", "E")
-    # g.add_edge("D", "F")
-    # g.add_edge("E", "F")
+    g.add_edge("D", "E")
+    g.add_edge("D", "F")
+    g.add_edge("E", "F")
 
-    # g.add_edge("C", "D")
+    g.add_edge("C", "D")
 
     from loader import load_karate
-    #girvannewman(load_karate()[0], method="dendrogram")
+    girvannewman(load_karate()[0], method="dendrogram")
     karate_graph = load_karate()[0]
-    #partition = girvannewman(karate_graph, method="communities", k=5)
+    partition = girvannewman(karate_graph, method="communities", k=5)
 
-    #print(f"Numebr of communities : {len(partition)}")
-    #for i, community in enumerate(partition):
-        #print(f"Community {i} : {community}")
+    print(f"Numebr of communities : {len(partition)}")
+    for i, community in enumerate(partition):
+        print(f"Community {i} : {community}")
 
-    #colors = {}
-    #color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
-    #for i, community in enumerate(partition):
-        #for vertex in community:
-            #colors[vertex] = color_list[i % len(color_list)]
+    colors = {}
+    color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
+    for i, community in enumerate(partition):
+        for vertex in community:
+            colors[vertex] = color_list[i % len(color_list)]
 
-    #karate_graph.plot(
-        #labels=True,
-        #colors=[colors[v] for v in karate_graph.vertices]
-    #)
-
-
-
-    # print(list(set(("1", "2"))))
-    # print(list(set(("2", "1"))))
+    karate_graph.plot(
+        labels=True,
+        colors=[colors[v] for v in karate_graph.vertices]
+    )
 
 
-    # for e,c in sorted(brandes(g).items(), key=lambda x: x[1]):
-    #     print(f"{e} = {c}")
 
-    # g.plot(labels=True)
+    print(list(set(("1", "2"))))
+    print(list(set(("2", "1"))))
 
-    #from loader import load_karate
 
-    #karate_graph, groups = load_karate()
+    for e,c in sorted(brandes(g).items(), key=lambda x: x[1]):
+      print(f"{e} = {c}")
 
-    # for e,c in sorted(brandes(karate_graph).items(), key=lambda x: x[1]):
-    #     print(f"{e} = {c}")
+    g.plot(labels=True)
 
-    # karate_graph.plot(labels=True)
-    #karate_graph.plot(labels=True)
+    from loader import load_karate
+
+    karate_graph, groups = load_karate()
+
+    for e,c in sorted(brandes(karate_graph).items(), key=lambda x: x[1]):
+        print(f"{e} = {c}")
+
+    karate_graph.plot(labels=True)
+    karate_graph.plot(labels=True)
 
 #test
-best_partition, best_Q, Q_values = _modularity(karate_graph)
-print(best_partition)
+#best_partition, best_Q, Q_values = _modularity(karate_graph)
+#print(best_partition)
 
-fig, ax = plt.subplots()
-ax.plot(Q_values)
-ax.set_xlabel("edges erased")
-ax.set_ylabel("Q")
-ax.set_title("Evolution of modularity ")
-ax.axhline(y=best_Q, color='red', linestyle='--', label=f"Meilleur Q = {best_Q:.3f}")
-ax.legend()
-plt.show()
+#fig, ax = plt.subplots()
+#ax.plot(Q_values)
+#ax.set_xlabel("edges erased")
+#ax.set_ylabel("Q")
+#ax.set_title("Evolution of modularity ")
+#ax.axhline(y=best_Q, color='red', linestyle='--', label=f"Meilleur Q = {best_Q:.3f}")
+#ax.legend()
+#plt.show()
 
-colors = {}
-color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
-for i, community in enumerate(best_partition):
-    for vertex in community:
-        colors[vertex] = color_list[i % len(color_list)]
+#colors = {}
+#color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
+#for i, community in enumerate(best_partition):
+    #for vertex in community:
+        #colors[vertex] = color_list[i % len(color_list)]
 
-karate_graph.plot(
-    labels=True,
-    colors=[colors[v] for v in karate_graph.vertices]
-)
+#karate_graph.plot(
+    #labels=True,
+    #colors=[colors[v] for v in karate_graph.vertices]
+#)
 
     
