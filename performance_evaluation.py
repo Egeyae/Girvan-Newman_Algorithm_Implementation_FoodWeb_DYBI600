@@ -2,7 +2,7 @@ from Graph import Graph
 from girvannewman import girvannewman
 import os
 from random import randint, random
-
+from time import time
 
 def random_graph(nb_communities : int, nb_vertices : int, e : float = 0.80, k :float = 0.20, additional_name: str|None = None):
     """
@@ -48,6 +48,70 @@ def random_graph(nb_communities : int, nb_vertices : int, e : float = 0.80, k :f
                             graph.add_edge(v,v2)
 
     return graph, communities
+
+def random_graph_article(z_out: int, avg_z: int = 16, nb_vertices: int = 128, nb_communities: int = 4):
+    """
+    Implementation of random graph generation as per the original Girvan Newman article
+    """
+    vertices_per_community = nb_vertices//nb_communities
+
+    other_vertices = nb_vertices - vertices_per_community
+
+    # we search: other_vertices * ? = z_out => z_out/other_vertices = ?
+    p_out = z_out/other_vertices
+
+    # we search: (vertices_per_community-1) * ? = avg_z-z_out => ? = (avg_z-z_out)/(vertices_per_community - 1)
+    p_in = (avg_z-z_out) / (vertices_per_community - 1)
+
+    g = Graph()
+
+    i = 0
+    com = {i:None for i in range(nb_vertices)}
+
+    for j in range(4):
+        for _ in range(vertices_per_community):
+            com[str(i)] = str(j)
+            g.add_vertex(str(i))
+            i+=1
+
+    for v in g.vertices:
+        for v2 in g.vertices:
+            if v == v2:
+                continue
+            if com[v] == com[v2]:
+                if random() <= p_in:
+                    g.add_edge(v, v2)
+            else:
+                if random() <= p_out:
+                    g.add_edge(v, v2)
+    return g
+
+def test_article(z_out_range: tuple[int] = (0, 9), n: int = 100, method: str="modularity"):
+    assert method in ("communities", "modularity"), "Provided method can only be communities or modularity"
+
+    os.makedirs("./test", exist_ok=True)
+
+    fname = f"./test/test_article_results_{z_out_range}_{n}_{method}.csv"
+
+
+    total = n * (z_out_range[1]-z_out_range[0]-1)
+    count = 0
+    for i in range(*z_out_range):
+        for j in range(n):
+            print(f"[{count}/{total}] - z_out = {i} - j = {j}", end="")
+            t = time()
+            g = random_graph_article(i)
+            print(f" - generation time = {time()-t}s", end="")
+            t = time()
+            match method:
+                case "modularity":
+                    result, _ = girvannewman(g, method="modularity")
+                case "communities":
+                    result = girvannewman(g, method="communities", k=i)
+
+            print(f" - compute time = {time()-t}s")
+            count += 1
+
 
 def compute_precision_recall(communities: list | dict, expected_communities: list | dict):
     """
@@ -175,4 +239,4 @@ def test_method(method = "communities",
 
 
 if __name__ == '__main__':
-    test_method()
+    test_article(method="communities", n=1)

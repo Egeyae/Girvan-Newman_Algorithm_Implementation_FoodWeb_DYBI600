@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from random import random, randint, seed
 from math import sqrt, ceil
-from adjustText import adjust_text
 
 
 SEED = int(random()*1000)
@@ -158,7 +157,7 @@ class Graph :
 
         return self.vertices.index(vertex)
     
-    def plot(self, k: int = 2500, desired: float = 0.2, repulsion: float = 0.2,
+    def plot(self, k: int = 500, desired: float = 0.2, repulsion: float = 0.2,
           attraction: float = 0.3, title: str|None = None, labels: bool = False,
           colors: list|None = None, output: str|None = None, show: bool = True,
           ax: plt.Axes|None = None):
@@ -226,7 +225,7 @@ class Graph :
                     dx = positions[i][0] - positions[j][0]
                     dy = positions[i][1] - positions[j][1]
                     dist = max(0.01, sqrt((dx*dx + dy*dy)))
-                    force = attraction * (dist**4 - desired)
+                    force = attraction * (dist**2 - desired)
                     change_vectors[i][0] += -dx/dist * force * 0.2
                     change_vectors[i][1] += -dy/dist * force * 0.2
 
