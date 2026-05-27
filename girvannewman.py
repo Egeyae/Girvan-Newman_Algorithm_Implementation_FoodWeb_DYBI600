@@ -231,12 +231,12 @@ def _modularity(g: Graph, return_graph: bool = False):
 
         if Q > best_Q :
             best_Q = Q
-            best_partition = partition
+            best_partition = partition.copy()
 
     if not return_graph:
         return best_partition, best_Q
     else:
-        return best_partition, best_Q, g_current
+        return best_partition, best_Q, g_current, modularity_list
 
 
 def _dendrogram(
