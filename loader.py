@@ -1,7 +1,7 @@
 import Graph as g
 import csv 
 
-name_food_web = {0 : "Phytoplancton", 1 : "Suspended Bacteria",2 : "Sediment Bacteria", 3 : "Benthic diatoms", 4 : "Free bacteria", 5 : "Heterotrop^hic microflagellates", 6 : "Microzooplankton",7: "Zooplankton", 8: "Cnetophore", 9: "Sea nettle", 10 : "Other suspendfeeders", 11 : "Mya", 12 :"Oysters", 13 : "Other polychaetes", 14 : "Nereis"}
+name_food_web = {0 : "Phytoplancton", 1 : "Suspended Bacteria",2 : "Sediment Bacteria", 3 : "Benthic diatoms", 4 : "Free bacteria", 5 : "Heterotrophic microflagellates", 6 : "Microzooplankton",7: "Zooplankton", 8: "Cnetophore", 9: "Sea nettle", 10 : "Other suspendfeeders", 11 : "Mya", 12 :"Oysters", 13 : "Other polychaetes", 14 : "Nereis", 15: "Macoma spp.", 16 : "Meio Fauna", 17 :"Crusta deposit feeders", 18: "Blue Crab", 19 :" Fish Larvae", 20 :"Alewife and Blue herring", 21 : "Bay anchovy", 22 :"Men haden", 23 :"Shad", 24:"croaker", 25 :"Hog choker", 26 : "Spot", 27 :"White Perch", 28 :"Catfish", 29 :"Blue Fish", 30 : "Weak Fish", 31 :"Summer Flounder", 32 :"Striped bass", 33 : "DOC", 34 :"POC suspended", 35 : "POC sediment"}
 
 def load_karate():
     """
@@ -83,28 +83,34 @@ def load_college_football():
     
     return college_football_graph, groups
 
-def load_data_food_web():
+def load_data_food_web_mat1():
     """
-        Function to load the cfoodweb dataset. Will return the graph.
+        Function to load the foodweb dataset. Will return the graph.
     """
     foodweb_graph = g.Graph(name="FoodWeb")
     with open("data/Foodweb_data/Adj_Mat_Coefficient_Chart.txt") as fmat :
         lines  = fmat.readlines()
         assert len(lines) == 36, "Not the right count of vertices in the files."
+        line_init = lines[0].strip().split()
+        k = 0 
+        line_init = line_init[1:]
+        while k < (len(line_init)) :
+            foodweb_graph.add_vertex(name_food_web[k])
+            k+=1
         for i in range(len(lines)):
-            line = lines[i].strip().split()
-            
-            assert int(line[0]) == i+1, "The index of i and the name of the vertex don't correspond."
-            line = line[1:]
-            assert len(line) == 36,"Not the right of vertices in the line."
-
-        return 1
+            line = lines[i].strip().split()[1:]
+            for j in range(len(lines)):
+                if float(line[j]) > 0.0:
+                    foodweb_graph.add_edge(foodweb_graph.get_vertex(i),foodweb_graph.get_vertex(j))
+                
+        return foodweb_graph
 
 if __name__ == "__main__":            
     karate_graph, groups = load_karate()
 
     college_graph, groups2 = load_college_football()
-    load_data_food_web()
+    foodweb_graph = load_data_food_web_mat1()
+    foodweb_graph.plot()
     #print(groups2)
     #college_graph.plot()
     #karate_graph.plot(labels=True)
