@@ -88,7 +88,7 @@ def load_data_food_web_mat1():
         Function to load the foodweb dataset. Will return the graph.
     """
     foodweb_graph = g.Graph(name="FoodWeb")
-    with open("data/Foodweb_data/Adj_Mat_Coefficient_Chart.txt") as fmat :
+    with open("data/Foodweb_data/mat_fig7.txt") as fmat :
         lines  = fmat.readlines()
         assert len(lines) == 36, "Not the right count of vertices in the files."
         line_init = lines[0].strip().split()
@@ -100,7 +100,7 @@ def load_data_food_web_mat1():
         for i in range(len(lines)):
             line = lines[i].strip().split()[1:]
             for j in range(len(lines)):
-                if float(line[j]) > 0.0:
+                if int(line[j]) > 0:
                     foodweb_graph.add_edge(foodweb_graph.get_vertex(i),foodweb_graph.get_vertex(j))
                 
         return foodweb_graph
@@ -110,8 +110,7 @@ if __name__ == "__main__":
 
     college_graph, groups2 = load_college_football()
     foodweb_graph = load_data_food_web_mat1()
-    foodweb_graph.plot()
-    print(foodweb_graph)
+    foodweb_graph.plot(labels=True)
     #print(groups2)
     #college_graph.plot()
     #karate_graph.plot(labels=True)
