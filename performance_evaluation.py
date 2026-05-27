@@ -310,4 +310,4 @@ def test_article(z_out_range: tuple[int] = (0, 9), n: int = 100, method: str="mo
 
 
 if __name__ == '__main__':
-    test_article(method="modularity", n=1, z_out_range=(0,2))
+    test_article(method="communities", n=1, z_out_range=(0,5))
