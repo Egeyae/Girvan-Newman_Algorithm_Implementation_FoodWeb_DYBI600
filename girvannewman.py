@@ -161,6 +161,10 @@ def _modularity(g: Graph, return_graph: bool = False):
     betweenness = brandes(g_current)
 
     while g_current.nb_edges > 0:
+        
+        if len(betweenness) == 0:
+            break
+
         edge = max(betweenness, key=lambda e: betweenness[e])
         u, v = edge.split('.')
         partition_before = connexion(g_current)
