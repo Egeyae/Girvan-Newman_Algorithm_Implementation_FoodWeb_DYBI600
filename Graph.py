@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
-from random import random, randint
-from math import sqrt
+from random import random, randint, seed
+from math import sqrt, ceil
 from adjustText import adjust_text
+
+
+SEED = int(random()*1000)
 
 
 class Graph :
@@ -175,8 +178,24 @@ class Graph :
             ax: matplotlib Axes object to plot on. If None, creates a new figure.
         """
         
-        # Compute positions (unchanged)
+        # Here we have 2 valid ways to have a determinisation of the positions placement
+        # We will use the seeding for the moment but it could interfere with other functions using random
+
+        # Compute positions
+        # Put the vertices in a grid pattern, not random so every similar graphs look pretty much the same
+        # nb_cols = ceil(sqrt(self.nb_vertices))
+        # nb_rows = ceil(self.nb_vertices / nb_cols)
+        # positions = []
+
+        # for i in range(self.nb_vertices):
+        #     # provides a position clamped in a square
+        #     x = (i % nb_cols) / max(nb_cols-1, 1) # if only one column => avoid 0 division
+        #     y = (i // nb_cols) / max(nb_rows-1, 1) 
+        #     positions.append([x,y])
+
+        seed(SEED)
         positions = [[random(), random()] for _ in range(self.nb_vertices)]
+        
         all_vertices = set(self.vertices)
         t = title or self._name
         change_vectors = [[0.0, 0.0] for _ in range(self.nb_vertices)]
@@ -228,12 +247,14 @@ class Graph :
 
         col = colors or ['blue' for _ in range(self.nb_vertices)]
 
-        ax.scatter(x, y, c=col, s=200)
-
         for i, vi in enumerate(self.vertices):
             for vj in self.neighborhoods[vi]:
                 j = self.get_index(vj)
-                ax.plot([x[i], x[j]], [y[i], y[j]], 'k-', alpha=0.2)
+                ax.plot([x[i], x[j]], [y[i], y[j]], 'k-', alpha=0.3, zorder=-1)
+
+        ax.scatter(x, y, c=col, s=200, zorder=1)
+
+        
 
         ax.set_title(t)
         if labels:

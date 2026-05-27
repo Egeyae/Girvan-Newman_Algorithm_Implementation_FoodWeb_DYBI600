@@ -110,10 +110,10 @@ def compute_precision_recall(communities: list | dict, expected_communities: lis
 
 
 def test_method(method = "communities", 
-    communities_range: tuple[int, int, int] = (2, 5, 1), 
-    vertices_range: tuple[int, int, int] = (10, 50, 10), 
+    communities_range: tuple[int, int, int] = (2, 10, 1), 
+    vertices_range: tuple[int, int, int] = (50, 60, 10), 
     e_range: tuple[int, int, int] = (80, 90, 10),
-    k_range: tuple[int, int, int] = (10, 30, 10),
+    k_range: tuple[int, int, int] = (20, 30, 10),
     n = 10
     ):
     """
@@ -129,19 +129,24 @@ def test_method(method = "communities",
          n: number of random graphs to generate and test for each set of unique parameters
     """
 
-    # we ensure method is one that can be tested using this function
-    # dendogram cannot be tested as it makes all vertices their own community
     assert method in ("communities", "modularity"), "Provided method can only be communities or modularity"
 
     os.makedirs("./test", exist_ok=True)
 
     fname = f"./test/test_results_{'-'.join([str(x) for x in communities_range])}_{'-'.join([str(x) for x in vertices_range])}_{'-'.join([str(x) for x in e_range])}_{'-'.join([str(x) for x in k_range])}_{n}_{method}.csv"
 
+    # Calculate total for progress tracking
+    c_count = len(range(*communities_range))
+    v_count = len(range(*vertices_range))
+    e_count = len(range(*e_range))
+    k_count = len(range(*k_range))
+    total = c_count * v_count * e_count * k_count * n
+    processed = 0
+
     with open(fname, "w") as f:
         f.write("nb_communities,nb_vertices,e,k,avg_precision,avg_recall\n")
         for c in range(*communities_range):
             for v in range(*vertices_range):
-                # using strange list building since range() doesnt accept float steps
                 for e in [x/100.0 for x in range(*e_range)]:
                     for k in [y/100.0 for y in range(*k_range)]:
                         precision, recall = 0.0, 0.0
@@ -149,22 +154,23 @@ def test_method(method = "communities",
                         for _ in range(n):
                             graph, expected_communities = random_graph(c, v, e, k)
 
-                            # here the c describes the number of expected communities, used by the function if the method is set to "communities"
                             if method == "communities":
                                 detected_communities = girvannewman(graph, method, c)
                             else:
                                 detected_communities, _ = girvannewman(graph, method, c)
 
                             p, r = compute_precision_recall(detected_communities, expected_communities)
-
                             precision += p
                             recall += r
 
+                            processed += 1
+                            print(f"\rProgress: {processed}/{total} ({100*processed/total:.1f}%)", end='')
+
                         precision /= n
                         recall /= n
-
                         f.write(f"{c},{v},{int(e*100)},{int(k*100)},{precision},{recall}\n")
 
+    print("\nDone!")
     return fname
 
 

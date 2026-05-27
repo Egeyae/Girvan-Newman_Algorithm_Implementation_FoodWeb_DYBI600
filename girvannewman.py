@@ -3,6 +3,18 @@ from scipy.cluster.hierarchy import dendrogram
 import matplotlib.pyplot as plt
 from copy import deepcopy
 
+
+LABEL_COLORS = [
+    '#1f77b4',  # Blue
+    '#ff7f0e',  # Orange
+    '#2ca02c',  # Green
+    '#d62728',  # Red
+    '#9467bd',  # Purple
+    '#8c564b',  # Brown
+    '#e377c2',  # Pink
+    '#7f7f7f',  # Gray
+]
+
 """
 TODO list:
     - Compute betweeness
@@ -186,61 +198,51 @@ def _modularity(g: Graph, return_graph: bool = False):
         return best_partition, best_Q, g_current
 
 
-def _dendrogram(g: Graph, height_method: str|None = None):
+def _dendrogram(
+    g: Graph,
+    height_method: str | None = None,
+    communities: list | None = None,
+    colors: list = LABEL_COLORS,
+    ax=None,
+    title: str | None = None
+):
     assert height_method in (None, "modularity")
 
     # make a copy of g, so we can make all modifications we want
     g_copy = deepcopy(g)
-
     edge_removal_order = []
 
     # apply girvan-newman up until no edges remain
     while g_copy.nb_edges > 0:
         betweenness = brandes(g_copy)
-
-        max_betweeness = max(betweenness.items(), key = lambda x: x[1])[0]
-
-        u,v = max_betweeness.split(".")
-
+        max_betweeness = max(betweenness.items(), key=lambda x: x[1])[0]
+        u, v = max_betweeness.split(".")
         edge_removal_order.append((u, v))
-
         g_copy.remove_edge(u, v)
 
-
-    # the goal of the following operation is to build a linkage matrix for the dendrogram function
-    # the linkage matrix describes how the dendrogram() function should build and group clusters
+    # Build linkage matrix
     linkage_matrix = []
-
     clusters = [{v} for v in g_copy.vertices]
     clusters_height = [1.0 if height_method is None else 0.0 for _ in g_copy.vertices]
-    vertex_cluster_index = {v:i for i,v in enumerate(g_copy.vertices)}
-
-
-    # for any further new clusters, the next index
+    vertex_cluster_index = {v: i for i, v in enumerate(g_copy.vertices)}
     next_cluster_index = len(g_copy.vertices)
 
-
-    for i, (u,v) in enumerate(edge_removal_order[::-1]):
+    for i, (u, v) in enumerate(edge_removal_order[::-1]):
         u_cluster = vertex_cluster_index[u]
         v_cluster = vertex_cluster_index[v]
+        g_copy.add_edge(u, v)
 
-        g_copy.add_edge(u,v)
-
-        # If the clusters of u and v are different, then it must mean that they get joined by the current edge
-        # If they are equal <=> u and v are in the same cluster and dont change the dendrogram (no separation of communities)
         if u_cluster != v_cluster:
-            clusters.append(clusters[u_cluster]|clusters[v_cluster])
+            clusters.append(clusters[u_cluster] | clusters[v_cluster])
 
             if height_method is None:
-                clusters_height.append(clusters_height[u_cluster]+clusters_height[v_cluster])
+                clusters_height.append(clusters_height[u_cluster] + clusters_height[v_cluster])
             elif height_method == "modularity":
                 partition = dict()
-
                 for v, j in vertex_cluster_index.items():
                     if j not in partition.keys():
                         partition[j] = []
                     partition[j].append(v)
-
                 clusters_height.append(1 - modularity(g_copy, list(partition.values())))
 
             for j in clusters[-1]:
@@ -248,14 +250,42 @@ def _dendrogram(g: Graph, height_method: str|None = None):
             next_cluster_index += 1
 
             linkage_matrix.append([
-                u_cluster, # the 2 clusters that are merged
+                u_cluster,
                 v_cluster,
-                clusters_height[-1], # the height of the merge
-                len(clusters[-1])]  # the new size of the cluster merge
-                )
+                clusters_height[-1],
+                len(clusters[-1])
+            ])
 
-    dendrogram(linkage_matrix, orientation="left", labels=g_copy.vertices)
-    plt.show()
+    user_ax = ax is not None
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6))
+
+    ax.cla()  # Clear the axis
+
+    # Plot dendrogram ON THE PROVIDED AXIS
+    dendrogram(
+        linkage_matrix,
+        orientation="left",
+        labels=g_copy.vertices,
+        ax=ax  # This is critical
+    )
+
+    if communities is not None:
+        vertex_to_color = {}
+        for i, community in enumerate(communities):
+            for vertex in community:
+                vertex_to_color[str(vertex)] = colors[i % len(colors)]
+        for lbl in ax.get_yticklabels():
+            lbl.set_color(vertex_to_color[lbl.get_text()])
+
+    if title:
+        ax.set_title(title)
+
+    if not user_ax:
+        plt.tight_layout()
+        plt.show()
+
+    return ax
 
 
 def _communities(g: Graph, k: int, return_graph: bool = False):
@@ -286,12 +316,19 @@ def _communities(g: Graph, k: int, return_graph: bool = False):
         return partition, g_copy
 
 
-def girvannewman(g: Graph, method: str="modularity", k: int|None = None, height_method: str|None = None, return_graph: bool = False):
+def girvannewman(g: Graph, method: str="modularity", 
+    k: int|None = None, 
+    height_method: str|None = None, 
+    return_graph: bool = False, 
+    communities: list|None = None, 
+    label_colors: list = LABEL_COLORS,
+    title: str|None = None,
+    ax = None):
     match method:
         case "modularity":
             return _modularity(g)
         case "dendrogram":
-            _dendrogram(g, height_method=height_method)
+            _dendrogram(g, height_method=height_method, communities=communities, colors = label_colors, title=title, ax=ax)
         case "communities":
             return _communities(g, k, return_graph=return_graph)
         case _:
@@ -322,9 +359,9 @@ if __name__ == '__main__':
     from loader import load_karate
     #girvannewman(load_karate()[0], method="dendrogram")
     karate_graph = load_karate()[0]
-    # partition, q = girvannewman(karate_graph, method="modularity", k=2, return_graph=True)
+    partition, q = girvannewman(karate_graph, method="modularity", k=2, return_graph=True)
     # partition = girvannewman(karate_graph, method="communities", k=2)
-    girvannewman(karate_graph, method="dendrogram")
+    # girvannewman(karate_graph, method="dendrogram")
 
     # print("Plotting")
     # colors = {}
@@ -337,6 +374,8 @@ if __name__ == '__main__':
     #     labels=True,
     #     colors=[colors[v] for v in karate_graph.vertices]
     # )
+
+    girvannewman(karate_graph, method="dendrogram", communities=partition)
 
     # print(f"Numebr of communities : {len(partition)}")
     # for i, community in enumerate(partition):
@@ -366,27 +405,27 @@ if __name__ == '__main__':
     #karate_graph.plot(labels=True)
 
     #test
-    best_partition, best_Q, Q_values = _modularity(karate_graph)
-    print(best_partition)
+    # best_partition, best_Q, Q_values = _modularity(karate_graph)
+    # print(best_partition)
 
-    fig, ax = plt.subplots()
-    ax.plot(Q_values)
-    ax.set_xlabel("edges erased")
-    ax.set_ylabel("Q modularity")
-    ax.set_title("Evolution of Q")
-    ax.axhline(y=best_Q, color='red', linestyle='--', label=f"Best Q = {best_Q:.3f}")
-    ax.legend()
-    plt.show()
+    # fig, ax = plt.subplots()
+    # ax.plot(Q_values)
+    # ax.set_xlabel("edges erased")
+    # ax.set_ylabel("Q modularity")   
+    # ax.set_title("Evolution of Q")
+    # ax.axhline(y=best_Q, color='red', linestyle='--', label=f"Best Q = {best_Q:.3f}")
+    # ax.legend()
+    # plt.show()
 
-    colors = {}
-    color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
-    for i, community in enumerate(best_partition):
-        for vertex in community:
-            colors[vertex] = color_list[i % len(color_list)]
+    # colors = {}
+    # color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
+    # for i, community in enumerate(best_partition):
+    #     for vertex in community:
+    #         colors[vertex] = color_list[i % len(color_list)]
 
-    karate_graph.plot(
-        labels=True,
-        colors=[colors[v] for v in karate_graph.vertices]
-    )
+    # karate_graph.plot(
+    #     labels=True,
+    #     colors=[colors[v] for v in karate_graph.vertices]
+    # )
 
     
