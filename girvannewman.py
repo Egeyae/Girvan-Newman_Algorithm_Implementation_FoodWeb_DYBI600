@@ -308,22 +308,76 @@ def _dendrogram(
 
 
 def _communities(g: Graph, k: int, return_graph: bool = False):
-    g_copy = deepcopy(g)
+
+    g_copy = Graph()
+    edges_added = set()
+    for v in g.vertices:
+        g_copy.add_vertex(v)
+    for v in g.vertices:
+        for u in g.get_neighborhood(v):
+            if (u, v) not in edges_added:
+                g_copy.add_edge(v, u)
+                edges_added.add((v, u))
+
+    betweenness = brandes(g_copy)
+    partition = connexion(g_copy)
 
     while g_copy.nb_edges != 0:
-        betweenness = brandes(g_copy)
+        if not betweenness:
+            break
 
         edge = max(betweenness, key=lambda e: betweenness[e])
         u, v = edge.split('.')
+
+        before_com = None
+        for com in partition:
+            if u in com:
+                before_com = com
+                break
 
         if v in g_copy.get_neighborhood(u):
             g_copy.remove_edge(u, v)
         elif u in g_copy.get_neighborhood(v):
             g_copy.remove_edge(v, u)
-        
-        partition = connexion(g_copy)
+        else:
+            break
 
-        if len(partition) >= k :
+        betweenness.pop(edge, None)
+
+        g_sub = Graph()
+        edges_sub = set()
+        for vertex in before_com:
+            g_sub.add_vertex(vertex)
+        for vertex in before_com:
+            for neighbor in g_copy.get_neighborhood(vertex):
+                if neighbor in before_com and (neighbor, vertex) not in edges_sub:
+                    g_sub.add_edge(vertex, neighbor)
+                    edges_sub.add((vertex, neighbor))
+
+        if bridge(g_copy, u, v):
+            new_comp = connexion(g_sub)
+            partition.remove(before_com)
+            partition.extend(new_comp)
+
+            for comp in new_comp:
+                g_sub2 = Graph()
+                edges_sub2 = set()
+                for vertex in comp:
+                    g_sub2.add_vertex(vertex)
+                for vertex in comp:
+                    for neighbor in g_copy.get_neighborhood(vertex):
+                        if neighbor in comp and (neighbor, vertex) not in edges_sub2:
+                            g_sub2.add_edge(vertex, neighbor)
+                            edges_sub2.add((vertex, neighbor))
+                sub_betweenness = brandes(g_sub2)
+                for key, val in sub_betweenness.items():
+                    betweenness[key] = val
+        else:
+            sub_betweenness = brandes(g_sub)
+            for key, val in sub_betweenness.items():
+                betweenness[key] = val
+
+        if len(partition) >= k:
             if not return_graph:
                 return partition
             else:
