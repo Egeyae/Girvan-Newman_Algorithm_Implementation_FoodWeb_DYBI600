@@ -161,10 +161,16 @@ def _modularity(g: Graph, return_graph: bool = False):
     betweenness = brandes(g_current)
 
     while g_current.nb_edges > 0:
-        partition_before = connexion(g_current)
-
         edge = max(betweenness, key=lambda e: betweenness[e])
         u, v = edge.split('.')
+        partition_before = connexion(g_current)
+
+        before_com = None
+        for community in partition_before:
+            if u in community: 
+                before_com = community
+                break
+            
 
         if v in g_current.get_neighborhood(u):
             g_current.remove_edge(u, v)
@@ -172,15 +178,17 @@ def _modularity(g: Graph, return_graph: bool = False):
             g_current.remove_edge(v, u)
         else:
             break
+        
+        betweenness.pop(edge, None)
 
         partition_after = connexion(g_current)
 
-        affected_edges = []
+        new_edges = []
         for community in partition_after:
-            if community not in partition_before:
-                affected_edges.append(community)
+            if community <= before_com:
+                new_edges.append(community)
         
-        for edges in affected_edges:
+        for edges in new_edges:
 
             g_sub = Graph()
             for vertex in edges:
@@ -193,11 +201,10 @@ def _modularity(g: Graph, return_graph: bool = False):
                     edges_sub.add((vertex, neighbor))
             
             sub_betweenness = brandes(g_sub)
-
             for key, val in sub_betweenness.items():
                 betweenness[key] = val
         
-        betweenness.pop(edge, None)
+        partition_after = connexion(g_current)
 
         Q = modularity(g, partition_after)
         modularity_list.append(Q)
