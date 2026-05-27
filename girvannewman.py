@@ -2,6 +2,7 @@ from Graph import Graph
 from scipy.cluster.hierarchy import dendrogram
 import matplotlib.pyplot as plt
 from copy import deepcopy
+from collections import deque 
 """
 TODO list:
     - Compute betweeness
@@ -105,36 +106,19 @@ def modularity(g_original, partition):
 
     return Q/(4*m)
             
-def bfs(g_current, source):
-    distances = {}
-    nb_paths = {}
-    befores ={}
-
-    for v in g_current.vertices:
-        distances[v] = -1
-        nb_paths[v] = 0
-        befores[v] = []
-    order_visited = []
-
+def bfs_distances(g_current, source):
+    distances = {v: -1 for v in g_current.vertices}
     distances[source] = 0
-    nb_paths[source] = 1
 
-    file =[source]
+    file = deque([source])
 
-    while file != [] :
-        visited = file.pop(0)
-        order_visited.append(visited)
-
+    while len(file) > 0 :
+        visited = file.popleft()
         for v in g_current.get_neighborhood(visited):
             if distances[v] == -1:
                 distances[v] = distances[visited] + 1
-                file.append(v)
-
-            if distances[v] == distances[visited] + 1:
-                nb_paths[v] += nb_paths[visited]
-                befores[v].append(visited)
-
-    return distances, nb_paths, befores, order_visited 
+                file.append(v) 
+    return distances
 
 def connexion(g):
     visited = set()
@@ -142,7 +126,7 @@ def connexion(g):
     for vertex in g.vertices : 
         composed = []
         if vertex not in visited : 
-            distances, nb_paths, befores, order_visited = bfs(g, vertex)
+            distances = bfs_distances(g, vertex)
             composed = {v for v in g.vertices if distances[v] != -1}
             visited.update(composed)
             partition.append(composed)
@@ -245,8 +229,8 @@ def _dendrogram(g: Graph):
                 len(clusters[-1])]  # the new size of the cluster merge
                 )
 
-    dendrogram(linkage_matrix, orientation="left", labels=g_copy.vertices)
-    plt.show()
+    #dendrogram(linkage_matrix, orientation="left", labels=g_copy.vertices)
+    #plt.show()
 
 
 
@@ -306,9 +290,11 @@ if __name__ == '__main__':
     # g.add_edge("C", "D")
 
     from loader import load_karate
-    #girvannewman(load_karate()[0], method="dendrogram")
+    girvannewman(load_karate()[0], method="modularity")
     karate_graph = load_karate()[0]
-    #partition = girvannewman(karate_graph, method="communities", k=5)
+    #partition, Q = girvannewman(karate_graph, method="modularity")
+
+    #print(partition)
 
     #print(f"Numebr of communities : {len(partition)}")
     #for i, community in enumerate(partition):
