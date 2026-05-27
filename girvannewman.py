@@ -91,33 +91,21 @@ def modularity(g_original, partition):
     Parameters : Graph"""
 
     m = g_original.nb_edges
-
-    degrees = {}
-
-    for vertex in g_original.vertices:
-        degrees[vertex] = g_original.get_length_neighborhood(vertex)
-
-    communitie_part ={}
-    for index, community in enumerate(partition):
-        for vertex in community :
-            communitie_part[vertex] = index
+    degrees = {v : g_original.get_length_neighborhood(v) for v in g_original.vertices}
 
     Q = 0
-
-    for i in g_original.vertices:
-        for j in g_original.vertices :
-            if communitie_part[i] == communitie_part[j]:
-                sij = 1
-            else:
-                sij = -1
-            if j in g_original.get_neighborhood(i):
-                A_ij = 1
-            else :
-                A_ij = 0
-            calcul = (A_ij -(degrees[i] *degrees[j])/(2*m)) *sij
-            Q+= calcul
-
-    return Q/(4*m)
+    for community in partition : 
+        e_c = 0
+        a_c = 0
+        for v in community : 
+            a_c+= degrees[v]
+            for u in g_original.get_neighborhood(v):
+                if u in community: 
+                    e_c += 1
+        e_c /= 2
+        Q+= (e_c / m) - (a_c / (2*m)) **2
+    
+    return Q
             
 def bfs_distances(g_current, source):
     distances = {v: -1 for v in g_current.vertices}
@@ -165,23 +153,23 @@ def _modularity(g: Graph, return_graph: bool = False):
                 g_current.add_edge(i,v)
 
     betweenness = brandes(g_current)
-    partition = connexion(g_current)
 
     while g_current.nb_edges > 0:
-
+        
         if len(betweenness) == 0:
             break
 
         edge = max(betweenness, key=lambda e: betweenness[e])
         u, v = edge.split('.')
+        partition_before = connexion(g_current)
 
         before_com = None
-
-        for community in partition:
+        for community in partition_before:
             if u in community: 
                 before_com = community
                 break
             
+
         if v in g_current.get_neighborhood(u):
             g_current.remove_edge(u, v)
         elif u in g_current.get_neighborhood(v):
@@ -190,48 +178,38 @@ def _modularity(g: Graph, return_graph: bool = False):
             break
         
         betweenness.pop(edge, None)
-        is_bridge = bridge(g_current, u,v)
 
-        g_sub = Graph()
-        edges_sub = set()
-        for vertex in before_com:
-            g_sub.add_vertex(vertex)
-        for vertex in before_com:
-            for neighbor in g_current.get_neighborhood(vertex):
-                if neighbor in before_com and (neighbor, vertex) not in edges_sub:
+        partition_after = connexion(g_current)
+
+        new_edges = []
+        for community in partition_after:
+            if community <= before_com:
+                new_edges.append(community)
+        
+        for edges in new_edges:
+
+            g_sub = Graph()
+            for vertex in edges:
+                g_sub.add_vertex(vertex)
+
+            edges_sub = set()
+            for vertex in edges :
+                for neighbor in g_current.get_neighborhood(vertex):
                     g_sub.add_edge(vertex, neighbor)
                     edges_sub.add((vertex, neighbor))
-
-        if is_bridge :
-            new_comp = connexion(g_sub)
-            partition.remove(before_com)
-            partition.extend(new_comp)
-
-            for comp in new_comp:
-                g_sub2 = Graph()
-                edges_sub2 = set()
-                for vertex in comp:
-                    g_sub2.add_vertex(vertex)
-                for vertex in comp:
-                    for neighbor in g_current.get_neighborhood(vertex):
-                        if neighbor in comp and (neighbor, vertex) not in edges_sub2:
-                            g_sub2.add_edge(vertex, neighbor)
-                            edges_sub2.add((vertex, neighbor))
-                    
-                sub_betweenness = brandes(g_sub2)
-                for key, val in sub_betweenness.items():
-                    betweenness[key] = val
-        else:
+            
             sub_betweenness = brandes(g_sub)
             for key, val in sub_betweenness.items():
                 betweenness[key] = val
+        
+        partition_after = connexion(g_current)
 
-        Q = modularity(g, partition)
+        Q = modularity(g, partition_after)
         modularity_list.append(Q)
 
         if Q > best_Q :
             best_Q = Q
-            best_partition = partition.copy()
+            best_partition = partition_after
 
     if not return_graph:
         return best_partition, best_Q, modularity_list
