@@ -111,6 +111,10 @@ if __name__ == "__main__":
     college_graph, groups2 = load_college_football()
     foodweb_graph = load_data_food_web_mat1()
     foodweb_graph.plot(labels=True)
+    dict_n ={}
+    for v in foodweb_graph.vertices:
+        dict_n[v] = len(foodweb_graph.neighborhoods[v])
+    print(dict_n)
     #print(groups2)
     #college_graph.plot()
     #karate_graph.plot(labels=True)
