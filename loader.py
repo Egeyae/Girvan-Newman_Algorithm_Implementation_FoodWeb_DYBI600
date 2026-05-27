@@ -1,6 +1,8 @@
 import Graph as g
 import csv 
 
+name_food_web = {0 : "Phytoplancton", 1 : "Suspended Bacteria",2 : "Sediment Bacteria", 3 : "Benthic diatoms", 4 : "Free bacteria", 5 : "Heterotrop^hic microflagellates", 6 : "Microzooplankton",7: "Zooplankton", 8: "Cnetophore", 9: "Sea nettle", 10 : "Other suspendfeeders", 11 : "Mya", 12 :"Oysters", 13 : "Other polychaetes", 14 : "Nereis"}
+
 def load_karate():
     """
         Function to load the karate club dataset. Will return the graph and the groups in the graph.
@@ -81,11 +83,28 @@ def load_college_football():
     
     return college_football_graph, groups
 
+def load_data_food_web():
+    """
+        Function to load the cfoodweb dataset. Will return the graph.
+    """
+    foodweb_graph = g.Graph(name="FoodWeb")
+    with open("data/Foodweb_data/Adj_Mat_Coefficient_Chart.txt") as fmat :
+        lines  = fmat.readlines()
+        assert len(lines) == 36, "Not the right count of vertices in the files."
+        for i in range(len(lines)):
+            line = lines[i].strip().split()
+            
+            assert int(line[0]) == i+1, "The index of i and the name of the vertex don't correspond."
+            line = line[1:]
+            assert len(line) == 36,"Not the right of vertices in the line."
+
+        return 1
 
 if __name__ == "__main__":            
     karate_graph, groups = load_karate()
 
     college_graph, groups2 = load_college_football()
-    print(groups2)
-    college_graph.plot()
+    load_data_food_web()
+    #print(groups2)
+    #college_graph.plot()
     #karate_graph.plot(labels=True)

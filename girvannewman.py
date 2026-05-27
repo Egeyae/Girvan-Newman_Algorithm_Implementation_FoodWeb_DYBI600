@@ -15,6 +15,7 @@ LABEL_COLORS = [
     '#7f7f7f',  # Gray
 ]
 
+from collections import deque
 """
 TODO list:
     - Compute betweeness
@@ -104,45 +105,33 @@ def modularity(g_original, partition):
     Q = 0
 
     for i in g_original.vertices:
-        for j in g_original.get_neighborhood(i) : #sij = 1 always because we arer lookign at the neighbors 
-            sij = 1
+        for j in g_original.vertices :
+            if communitie_part[i] == communitie_part[j]:
+                sij = 1
+            else:
+                sij = -1
             if j in g_original.get_neighborhood(i):
                 A_ij = 1
             else :
                 A_ij = 0
-            Q += (A_ij -(degrees[i] *degrees[j])/(2*m)) *sij
+            calcul = (A_ij -(degrees[i] *degrees[j])/(2*m)) *sij
+            Q+= calcul
+
     return Q/(4*m)
             
-def bfs(g_current, source):
-    distances = {}
-    nb_paths = {}
-    befores ={}
-
-    for v in g_current.vertices:
-        distances[v] = -1
-        nb_paths[v] = 0
-        befores[v] = []
-    order_visited = []
-
+def bfs_distances(g_current, source):
+    distances = {v: -1 for v in g_current.vertices}
     distances[source] = 0
-    nb_paths[source] = 1
 
-    file =[source]
+    file = deque([source])
 
-    while file != [] :
-        visited = file.pop(0)
-        order_visited.append(visited)
-
+    while len(file) > 0 :
+        visited = file.popleft()
         for v in g_current.get_neighborhood(visited):
             if distances[v] == -1:
                 distances[v] = distances[visited] + 1
-                file.append(v)
-
-            if distances[v] == distances[visited] + 1:
-                nb_paths[v] += nb_paths[visited]
-                befores[v].append(visited)
-
-    return distances, nb_paths, befores, order_visited 
+                file.append(v) 
+    return distances
 
 def connexion(g):
     visited = set()
@@ -150,7 +139,7 @@ def connexion(g):
     for vertex in g.vertices : 
         composed = []
         if vertex not in visited : 
-            distances, nb_paths, befores, order_visited = bfs(g, vertex)
+            distances = bfs_distances(g, vertex)
             composed = {v for v in g.vertices if distances[v] != -1}
             visited.update(composed)
             partition.append(composed)
@@ -164,16 +153,10 @@ def _modularity(g: Graph, return_graph: bool = False):
     g_current = Graph()
     for v in g.vertices:
         g_current.add_vertex(v)
-    edges_added = set()
     for i in g.vertices:
         for v in g.get_neighborhood(i):
-            if (v,i) not in edges_added : 
+            if v not in g_current.get_neighborhood(i):
                 g_current.add_edge(i,v)
-                edges_added.add((i,v))
-
-
-    max_ = 5
-    no_improve = 0
 
     while g_current.nb_edges > 0:
         betweenness = brandes(g_current)
@@ -192,12 +175,6 @@ def _modularity(g: Graph, return_graph: bool = False):
         if Q > best_Q :
             best_Q = Q
             best_partition = partition
-            no_improve = 0
-        else : 
-            no_improve += 1
-            if no_improve >= max_ :
-                break
-            
 
     if not return_graph:
         return best_partition, best_Q
@@ -344,95 +321,88 @@ def girvannewman(g: Graph, method: str="modularity",
 
 if __name__ == '__main__':
     # Butterfly graph :-)
-    # g = Graph()
-    # g.add_vertex("A")
-    # g.add_vertex("B")
-    # g.add_vertex("C")
+    g = Graph()
+    g.add_vertex("A")
+    g.add_vertex("B")
+    g.add_vertex("C")
 
-    # g.add_edge("A", "B")
-    # g.add_edge("A", "C")
-    # g.add_edge("B", "C")
+    g.add_edge("A", "B")
+    g.add_edge("A", "C")
+    g.add_edge("B", "C")
 
-    # g.add_vertex("D")
-    # g.add_vertex("E")
-    # g.add_vertex("F")
+    g.add_vertex("D")
+    g.add_vertex("E")
+    g.add_vertex("F")
 
-    # g.add_edge("D", "E")
-    # g.add_edge("D", "F")
-    # g.add_edge("E", "F")
+    g.add_edge("D", "E")
+    g.add_edge("D", "F")
+    g.add_edge("E", "F")
 
-    # g.add_edge("C", "D")
+    g.add_edge("C", "D")
 
     from loader import load_karate
-    #girvannewman(load_karate()[0], method="dendrogram")
+    girvannewman(load_karate()[0], method="dendrogram")
     karate_graph = load_karate()[0]
-    partition, q = girvannewman(karate_graph, method="modularity", k=2, return_graph=True)
-    # partition = girvannewman(karate_graph, method="communities", k=2)
-    # girvannewman(karate_graph, method="dendrogram")
+    partition = girvannewman(karate_graph, method="communities", k=5)
 
-    # print("Plotting")
-    # colors = {}
-    # color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
-    # for i, community in enumerate(partition):
-    #     for vertex in community:
-    #         colors[vertex] = color_list[i % len(color_list)]
+    print(f"Numebr of communities : {len(partition)}")
+    for i, community in enumerate(partition):
+        print(f"Community {i} : {community}")
 
-    # karate_graph.plot(
-    #     labels=True,
-    #     colors=[colors[v] for v in karate_graph.vertices]
-    # )
+    colors = {}
+    color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
+    for i, community in enumerate(partition):
+        for vertex in community:
+            colors[vertex] = color_list[i % len(color_list)]
 
-    girvannewman(karate_graph, method="dendrogram", communities=partition)
-
-    # print(f"Numebr of communities : {len(partition)}")
-    # for i, community in enumerate(partition):
-    #     print(f"Community {i} : {community}")
-
-    
+    karate_graph.plot(
+        labels=True,
+        colors=[colors[v] for v in karate_graph.vertices]
+    )
 
 
 
-    # print(list(set(("1", "2"))))
-    # print(list(set(("2", "1"))))
+    print(list(set(("1", "2"))))
+    print(list(set(("2", "1"))))
 
 
-    # for e,c in sorted(brandes(g).items(), key=lambda x: x[1]):
-    #     print(f"{e} = {c}")
+    for e,c in sorted(brandes(g).items(), key=lambda x: x[1]):
+      print(f"{e} = {c}")
 
-    # g.plot(labels=True)
+    g.plot(labels=True)
 
-    #from loader import load_karate
+    from loader import load_karate
 
-    #karate_graph, groups = load_karate()
+    karate_graph, groups = load_karate()
 
-    # for e,c in sorted(brandes(karate_graph).items(), key=lambda x: x[1]):
-    #     print(f"{e} = {c}")
+    for e,c in sorted(brandes(karate_graph).items(), key=lambda x: x[1]):
+        print(f"{e} = {c}")
 
-    # karate_graph.plot(labels=True)
-    #karate_graph.plot(labels=True)
+    karate_graph.plot(labels=True)
+    karate_graph.plot(labels=True)
 
-    #test
-    # best_partition, best_Q, Q_values = _modularity(karate_graph)
-    # print(best_partition)
+#test
+#best_partition, best_Q, Q_values = _modularity(karate_graph)
+#print(best_partition)
 
-    # fig, ax = plt.subplots()
-    # ax.plot(Q_values)
-    # ax.set_xlabel("edges erased")
-    # ax.set_ylabel("Q modularity")   
-    # ax.set_title("Evolution of Q")
-    # ax.axhline(y=best_Q, color='red', linestyle='--', label=f"Best Q = {best_Q:.3f}")
-    # ax.legend()
-    # plt.show()
+#fig, ax = plt.subplots()
+#ax.plot(Q_values)
+#ax.set_xlabel("edges erased")
+#ax.set_ylabel("Q")
+#ax.set_title("Evolution of modularity ")
+#ax.axhline(y=best_Q, color='red', linestyle='--', label=f"Meilleur Q = {best_Q:.3f}")
+#ax.legend()
+#plt.show()
 
-    # colors = {}
-    # color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
-    # for i, community in enumerate(best_partition):
-    #     for vertex in community:
-    #         colors[vertex] = color_list[i % len(color_list)]
+#colors = {}
+#color_list = ["red", "blue", "green", "yellow", "purple", "orange"]
+#for i, community in enumerate(best_partition):
+    #for vertex in community:
+        #colors[vertex] = color_list[i % len(color_list)]
 
-    # karate_graph.plot(
-    #     labels=True,
-    #     colors=[colors[v] for v in karate_graph.vertices]
-    # )
+#karate_graph.plot(
+    #labels=True,
+    #colors=[colors[v] for v in karate_graph.vertices]
+#)
 
     
