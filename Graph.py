@@ -90,6 +90,10 @@ class Graph :
         self._check_vertex(vertex1)
         self._check_vertex(vertex2)
 
+        # we assert that the edge doesn't already exist, else we exit early
+        if vertex2 in self.get_neighborhood(vertex1):
+            return
+
         #If it's not the case, we add the edge. 
         self.neighborhoods[vertex1].add(vertex2)
         self.neighborhoods[vertex2].add(vertex1)

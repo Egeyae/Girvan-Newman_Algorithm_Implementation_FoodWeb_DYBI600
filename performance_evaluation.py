@@ -149,7 +149,7 @@ def compute_fraction_correct(communities: list | dict, expected_communities: lis
     total = correct + invalid + missed
     return correct / total if total > 0 else 0.0
 
-def test_article(z_out_range: tuple[int] = (0, 9), n: int = 100, method: str="modularity"):
+def test_article(z_out_range: tuple[int] = (0, 9), n: int = 100, method: str="modularity", nb_vertices: int = 128, nb_communities: int = 4):
     assert method in ("communities", "modularity"), "Provided method can only be communities or modularity"
 
     os.makedirs("./test", exist_ok=True)
@@ -167,7 +167,7 @@ def test_article(z_out_range: tuple[int] = (0, 9), n: int = 100, method: str="mo
             for j in range(n):
                 #print(f"[{count}/{total}] - z_out = {i} - j = {j}", end="")
                 #t = time()
-                g, expected = random_graph_article(i)
+                g, expected = random_graph_article(i, nb_vertices=nb_vertices, nb_communities=nb_communities)
                 #print(f" - generation time = {time()-t}s", end="")
                 t = time()
                 match method:
@@ -310,4 +310,4 @@ def test_article(z_out_range: tuple[int] = (0, 9), n: int = 100, method: str="mo
 
 
 if __name__ == '__main__':
-    test_article(method="communities", n=1, z_out_range=(0,5))
+    test_article(method="modularity", n=1, z_out_range=(0,9), nb_vertices=64)
